@@ -19,6 +19,8 @@ namespace XmlRefactor
             this.initObsoleteDateFromFile(@"../../RulesInput/ObsoleteIn81.txt", @"30\06\2018");
             this.initObsoleteDateFromFile(@"../../RulesInput/ObsoleteIn100.txt", @"31\03\2019");
             this.initObsoleteDateFromFile(@"../../RulesInput/ObsoleteIn107.txt", @"30\11\2019");
+            this.initObsoleteDateFromFile(@"../../RulesInput/ObsoleteIn1013.txt", @"30\6\2020");
+            this.initObsoleteDateFromFile(@"../../RulesInput/ObsoleteIn1017.txt", @"30\11\2020");
         }
 
         public override string RuleName()
@@ -70,7 +72,7 @@ namespace XmlRefactor
             {
                 return obsoleteDates[AOTPath];
             }
-            return @"30\06\2020";
+            return @"30\06\2021";
     }
 
         public string Run(string _input, int _startAt = 0)

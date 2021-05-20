@@ -37,7 +37,7 @@ namespace XmlRefactor
 
         public bool include(string source)
         {
-            Boolean errorsOnly = true;
+            bool errorsOnly = false;
             if (errorsOnly)
             {
                 int pos = source.IndexOf("[sysobsolete");
