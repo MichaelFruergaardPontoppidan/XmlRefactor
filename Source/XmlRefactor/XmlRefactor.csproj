@@ -105,6 +105,7 @@
     <Compile Include="Rules\Metadata\RuleTableIndexUnique.cs" />
     <Compile Include="Rules\Metadata\RuleEnumValue.cs" />
     <Compile Include="Rules\Obsolete\RuleConcurrentDeletesFlight.cs" />
+    <Compile Include="Rules\Obsolete\RuleDeleteObsoleteMethods.cs" />
     <Compile Include="Rules\Obsolete\RuleObsoleteAddDate.cs" />
     <Compile Include="Rules\Rule.cs" />
     <Compile Include="Form1.cs">
@@ -161,7 +162,10 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="RulesInput\MethodsToDelete.txt" />
     <Content Include="RulesInput\ObsoleteIn100.txt" />
+    <Content Include="RulesInput\ObsoleteIn1013.txt" />
+    <Content Include="RulesInput\ObsoleteIn1017.txt" />
     <Content Include="RulesInput\ObsoleteIn107.txt" />
     <Content Include="RulesInput\ObsoleteIn70.txt" />
     <Content Include="RulesInput\ObsoleteIn72.txt" />
