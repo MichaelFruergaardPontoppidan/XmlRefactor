@@ -13,7 +13,6 @@ namespace XmlRefactor
     class RuleAddLink : Rule
     {
         string methodName;
-        string formName;
 
         public override string RuleName()
         {
@@ -70,7 +69,7 @@ namespace XmlRefactor
         {
             using (StreamWriter sw = File.AppendText(this.logFileName())) 
             {
-                sw.WriteLine(string.Format("{0};{1};{2};{3};{4}", severity, Scanner.FILENAME, formName, methodName, message));
+                sw.WriteLine(string.Format("{0};{1};{2};{3}", severity, Scanner.FILENAME, methodName, message));
             }
         }
 

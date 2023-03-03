@@ -37,7 +37,7 @@ namespace XmlRefactor
 
         public override bool Enabled()
         {
-            return true;
+            return false;
         }
 
         public override string Grouping()

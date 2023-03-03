@@ -95,6 +95,7 @@
     <Compile Include="Rules\Collectors\RuleCollectMethodNames.cs" />
     <Compile Include="Rules\Extensibility\RuleReplaceableSwitch.cs" />
     <Compile Include="Rules\InventDim\RuleInventDim.cs" />
+    <Compile Include="Rules\LockDown\RuleLockDownClassInternal.cs" />
     <Compile Include="Rules\LockDown\RuleLockDownInternalUseOnly.cs" />
     <Compile Include="Rules\Metadata\RuleAddLink.cs" />
     <Compile Include="Rules\Metadata\RuleArgsMenuItem.cs" />
