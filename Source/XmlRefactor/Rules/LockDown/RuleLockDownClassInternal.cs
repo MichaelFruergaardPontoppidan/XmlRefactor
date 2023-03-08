@@ -20,7 +20,7 @@ namespace XmlRefactor
 
         public override bool Enabled()
         {
-            return true;
+            return false;
         }
         override public string Grouping()
         {

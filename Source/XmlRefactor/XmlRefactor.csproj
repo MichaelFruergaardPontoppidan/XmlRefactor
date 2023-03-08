@@ -80,6 +80,7 @@
     <Compile Include="Rules\ATL\RuleATLMethod.cs" />
     <Compile Include="Rules\ATL\RuleATLClassdeclaration.cs" />
     <Compile Include="Rules\ATL\RuleATLClassRename.cs" />
+    <Compile Include="Rules\ATL\RuleATLObsoleteRefactoring.cs" />
     <Compile Include="Rules\BPFixers\RuleNormalImageMapAddress.cs" />
     <Compile Include="Rules\BPFixers\RuleEndLengthyOperation.cs" />
     <Compile Include="Rules\BPFixers\RuleStartLengthyOperation.cs" />
@@ -120,6 +121,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rules\SDMerge\RuleResolveKeepTheirs.cs" />
     <Compile Include="Rules\SDMerge\RuleResolveWhiteSpaceBaseLess.cs" />
+    <Compile Include="Rules\Tests\RuleRenameScenarioTests.cs" />
     <Compile Include="XmlReaders.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
