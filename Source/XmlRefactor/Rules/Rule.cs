@@ -17,8 +17,7 @@ namespace XmlRefactor
         }
         protected string logFileName()
         {
-            string s = @"e:\temp\log_" + this.RuleName() + "_8_1_2.txt";
-//            string s = @"e:\temp\log_" + this.RuleName() + "_" + now + ".txt";
+            string s = @"c:\temp\log_" + this.RuleName() + "_" + now + ".txt";
             return s;
         }
         protected XmlMatch xpoMatch

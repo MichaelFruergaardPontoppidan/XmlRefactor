@@ -45,12 +45,17 @@ namespace XmlRefactor
             {                           
 
                 string source = match.Groups[2].Value;
-                string newSource = Regex.Replace(source, @"\.setWHSUOMSeqGroup\(", @".setUnitSequenceGroup(", RegexOptions.IgnoreCase);
-                newSource = Regex.Replace(newSource, @"\.setUnitOfMeasure\(", @".setUnit(", RegexOptions.IgnoreCase);
-                newSource = Regex.Replace(newSource, @"\.setSalesUnitOfMeasure\(", @".setSalesUnit(", RegexOptions.IgnoreCase);
-                newSource = Regex.Replace(newSource, @"\.setPurchaseUnitOfMeasure\(", @".setPurchaseUnit(", RegexOptions.IgnoreCase);
-                newSource = Regex.Replace(newSource, @"\.setPmfProductType\(", @".setProductionType(", RegexOptions.IgnoreCase);
-
+                string newSource = Regex.Replace(source, @"AtlWhsTestCase\:\:assertWarningStatic\(", @"AtlInfologValidator::assertWarning(", RegexOptions.IgnoreCase);
+                newSource = Regex.Replace(newSource, @"AtlWhsTestCase\:\:assertSingleWarningStatic\(", @"AtlInfologValidator::assertSingleWarning", RegexOptions.IgnoreCase);
+                
+                /*
+                                string newSource = Regex.Replace(source, @"\.setWHSUOMSeqGroup\(", @".setUnitSequenceGroup(", RegexOptions.IgnoreCase);
+                                newSource = Regex.Replace(newSource, @"\.setUnitOfMeasure\(", @".setUnit(", RegexOptions.IgnoreCase);
+                                newSource = Regex.Replace(newSource, @"\.setSalesUnitOfMeasure\(", @".setSalesUnit(", RegexOptions.IgnoreCase);
+                                newSource = Regex.Replace(newSource, @"\.setPurchaseUnitOfMeasure\(", @".setPurchaseUnit(", RegexOptions.IgnoreCase);
+                                newSource = Regex.Replace(newSource, @"\.setPmfProductType\(", @".setProductionType(", RegexOptions.IgnoreCase);
+                                newSource = Regex.Replace(newSource, @"\.setWHSReservationHierarchy\(", @".setReservationHierarchy(", RegexOptions.IgnoreCase);
+                */
                 _input = _input.Replace(source, newSource);
                 Hits++;
 
