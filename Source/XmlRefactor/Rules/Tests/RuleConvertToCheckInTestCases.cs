@@ -24,7 +24,7 @@ namespace XmlRefactor
         }
         override public string Grouping()
         {
-            return "Checkin Tests";
+            return "Tests";
         }
         protected override void buildXpoMatch()
         {

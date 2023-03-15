@@ -45,17 +45,18 @@ namespace XmlRefactor
             {                           
 
                 string source = match.Groups[2].Value;
-                string newSource = Regex.Replace(source, @"AtlWhsTestCase\:\:assertWarningStatic\(", @"AtlInfologValidator::assertWarning(", RegexOptions.IgnoreCase);
-                newSource = Regex.Replace(newSource, @"AtlWhsTestCase\:\:assertSingleWarningStatic\(", @"AtlInfologValidator::assertSingleWarning", RegexOptions.IgnoreCase);
-                
-                /*
-                                string newSource = Regex.Replace(source, @"\.setWHSUOMSeqGroup\(", @".setUnitSequenceGroup(", RegexOptions.IgnoreCase);
-                                newSource = Regex.Replace(newSource, @"\.setUnitOfMeasure\(", @".setUnit(", RegexOptions.IgnoreCase);
-                                newSource = Regex.Replace(newSource, @"\.setSalesUnitOfMeasure\(", @".setSalesUnit(", RegexOptions.IgnoreCase);
-                                newSource = Regex.Replace(newSource, @"\.setPurchaseUnitOfMeasure\(", @".setPurchaseUnit(", RegexOptions.IgnoreCase);
-                                newSource = Regex.Replace(newSource, @"\.setPmfProductType\(", @".setProductionType(", RegexOptions.IgnoreCase);
-                                newSource = Regex.Replace(newSource, @"\.setWHSReservationHierarchy\(", @".setReservationHierarchy(", RegexOptions.IgnoreCase);
-                */
+                            string newSource = Regex.Replace(source, @"\.setWHSUOMSeqGroup\(", @".setUnitSequenceGroup(", RegexOptions.IgnoreCase);
+                            newSource = Regex.Replace(newSource, @"\.setUnitOfMeasure\(", @".setUnit(", RegexOptions.IgnoreCase);
+                            newSource = Regex.Replace(newSource, @"\.setSalesUnitOfMeasure\(", @".setSalesUnit(", RegexOptions.IgnoreCase);
+                            newSource = Regex.Replace(newSource, @"\.setPurchaseUnitOfMeasure\(", @".setPurchaseUnit(", RegexOptions.IgnoreCase);
+                            //newSource = Regex.Replace(newSource, @"\.setPmfProductType\(", @".setProductionType(", RegexOptions.IgnoreCase);
+                            newSource = Regex.Replace(newSource, @"\.setWHSReservationHierarchy\(", @".setReservationHierarchy(", RegexOptions.IgnoreCase);
+                            //newSource = Regex.Replace(newSource, @"\.setPlannedOrderType\(", @".setDefaultOrderType(", RegexOptions.IgnoreCase);
+                            newSource = Regex.Replace(newSource, @"\.setPmfPlanningItemId\(", @".setPlanningFormulaItemId(", RegexOptions.IgnoreCase);
+                            //newSource = Regex.Replace(newSource, @"\.setReqGroup\(", @".setCoverageGroup(", RegexOptions.IgnoreCase);
+                            newSource = Regex.Replace(newSource, @"SysTestCaseDatasetDependency\(\'DemoData\'\, ", @"SysTestCaseDataDependency(", RegexOptions.IgnoreCase);
+                            newSource = Regex.Replace(newSource, @"SysTestCaseDatasetDependencyAttribute\(\'DemoData\'\, ", @"SysTestCaseDataDependency(", RegexOptions.IgnoreCase);
+
                 _input = _input.Replace(source, newSource);
                 Hits++;
 

@@ -81,14 +81,15 @@
     <Compile Include="Rules\ATL\RuleATLClassdeclaration.cs" />
     <Compile Include="Rules\ATL\RuleATLClassRename.cs" />
     <Compile Include="Rules\ATL\RuleATLObsoleteRefactoring.cs" />
+    <Compile Include="Rules\BPFixers\RuleBeautifyClassAttributes.cs" />
     <Compile Include="Rules\BPFixers\RuleNormalImageMapAddress.cs" />
     <Compile Include="Rules\BPFixers\RuleEndLengthyOperation.cs" />
     <Compile Include="Rules\BPFixers\RuleStartLengthyOperation.cs" />
     <Compile Include="Rules\BPFixers\RuleXMLCommentsDoubleSlash.cs" />
     <Compile Include="Rules\BPFixers\RuleXMLEmptyCommentsCleanUp.cs" />
     <Compile Include="Rules\BPFixers\RuleXMLCommentsCleanUp.cs" />
-    <Compile Include="Rules\CIT\RuleConvertToCheckInTestCases.cs" />
-    <Compile Include="Rules\CIT\RuleCheckInTestCases.cs" />
+    <Compile Include="Rules\Tests\RuleConvertToCheckInTestCases.cs" />
+    <Compile Include="Rules\Tests\RuleCheckInTestCases.cs" />
     <Compile Include="Rules\Collectors\RuleCollectTestStats.cs" />
     <Compile Include="Rules\Collectors\RuleCollectObsoleteMetaData.cs" />
     <Compile Include="Rules\Collectors\RuleCollectOverriddingMethodNames.cs" />
