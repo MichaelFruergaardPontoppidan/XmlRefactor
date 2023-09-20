@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DeltaInfo.cs" />
+    <Compile Include="LabelFile.cs" />
     <Compile Include="MetaData.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -91,6 +92,9 @@
     <Compile Include="Rules\BPFixers\RuleXMLCommentsDoubleSlash.cs" />
     <Compile Include="Rules\BPFixers\RuleXMLEmptyCommentsCleanUp.cs" />
     <Compile Include="Rules\BPFixers\RuleXMLCommentsCleanUp.cs" />
+    <Compile Include="Rules\Collectors\RuleCollectFinTagCandidateTables.cs" />
+    <Compile Include="Rules\HelpTexts\RuleCreateLabels.cs" />
+    <Compile Include="Rules\HelpTexts\RuleAddHelpTextToControl.cs" />
     <Compile Include="Rules\Tests\RuleConvertToCheckInTestCases.cs" />
     <Compile Include="Rules\Tests\RuleCheckInTestCases.cs" />
     <Compile Include="Rules\Collectors\RuleCollectTestStats.cs" />
@@ -171,6 +175,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="RulesInput\HelpTextsToAdd.txt" />
     <Content Include="RulesInput\IndexFieldsToMakeOptional.txt" />
     <Content Include="RulesInput\MethodsToDelete.txt" />
     <Content Include="RulesInput\ObsoleteIn100.txt" />
