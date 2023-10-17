@@ -95,6 +95,7 @@
     <Compile Include="Rules\Collectors\RuleCollectFinTagCandidateTables.cs" />
     <Compile Include="Rules\HelpTexts\RuleCreateLabels.cs" />
     <Compile Include="Rules\HelpTexts\RuleAddHelpTextToControl.cs" />
+    <Compile Include="Rules\Obsolete\RuleWHSCatchWeightFeatureFlightingDetour.cs" />
     <Compile Include="Rules\Tests\RuleConvertToCheckInTestCases.cs" />
     <Compile Include="Rules\Tests\RuleCheckInTestCases.cs" />
     <Compile Include="Rules\Collectors\RuleCollectTestStats.cs" />
