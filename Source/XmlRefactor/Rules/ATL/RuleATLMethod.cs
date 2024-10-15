@@ -539,14 +539,17 @@ namespace XmlRefactor
             if (methodName.ToLowerInvariant() == "classdeclaration")
                 return methodName;
             int startPos = 1;
-            string res;
+            string res = String.Empty;
             do
             {
                 startPos++;
                 int pos = source.IndexOf(" "+methodName, startPos);
-                int lineStart = source.LastIndexOf(Environment.NewLine, pos) + 2;
-                int lineEnd = source.IndexOf(Environment.NewLine, lineStart);
-                res = source.Substring(lineStart, lineEnd - lineStart);
+                if (pos > 0)
+                {
+                    int lineStart = source.LastIndexOf(Environment.NewLine, pos) + 2;
+                    int lineEnd = source.IndexOf(Environment.NewLine, lineStart);
+                    res = source.Substring(lineStart, lineEnd - lineStart);
+                }
             }
             while (res.TrimStart().StartsWith("//") || res.TrimStart().StartsWith("["));
 

@@ -20,7 +20,7 @@ namespace XmlRefactor
 
         public override bool Enabled()
         {
-            return false;
+            return true;
         }
         override public string Grouping()
         {
@@ -60,7 +60,7 @@ namespace XmlRefactor
         {
             int posOfClass = this.findPosOfFirst("class ", newSource);
             int posOfFirstAttr = this.findPosOfFirst("[", newSource);
-            if (posOfFirstAttr >= 0)
+            if (posOfFirstAttr >= 0 && posOfClass>=0)
             {
                 int posOfLastAttr = newSource.LastIndexOf("]", posOfClass);
                 if (posOfLastAttr >= 0)
@@ -131,6 +131,8 @@ namespace XmlRefactor
                 }
                 newLayout += "\r\n]\r\n";
                 newLayout = newLayout.Replace("Attribute(", "(");
+                newLayout = newLayout.Replace("Attribute\r\n]", "\r\n]");
+                newLayout = newLayout.Replace("Attribute,", ",");
                 newLayout = newLayout.Replace("        ", "    ");
 
                 if (attributesFound == 1)
@@ -149,18 +151,32 @@ namespace XmlRefactor
             Match match = xpoMatch.Match(_input, _startAt);
             if (match.Success)
             {
-                string source = match.Groups[1].Value;                
-               
+                string source = match.Groups[1].Value;
+
                 Boolean isBody = false;
+                Boolean isInMultilineComment = false;
                 string usingLines = String.Empty;
                 string usingNetLines = String.Empty;
                 string macroLines = string.Empty;
                 string xmlDocLines = string.Empty;
                 string theRest = string.Empty;
+                string multilineComment = string.Empty;
                 HashSet<string> usingStatements = new HashSet<string>();
                 foreach (var line in source.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
                 {
-                    if (line.TrimStart().StartsWith("using") || 
+                    if (isInMultilineComment)
+                    {
+                        multilineComment += line + Environment.NewLine;
+                        if (line.TrimEnd().EndsWith("*/"))
+                        {
+                            isInMultilineComment = false;
+                        }
+                        else if (line.TrimEnd().Contains("*/"))
+                        {
+                            throw new Exception("Not supported");
+                        }
+                    }
+                    else if (line.TrimStart().StartsWith("using") || 
                         line.Contains("CDATA"))
                     {
                         if (line.EndsWith(";"))
@@ -179,6 +195,11 @@ namespace XmlRefactor
                     else if (line.TrimStart().StartsWith("///"))
                     {
                         xmlDocLines += line.TrimStart() + Environment.NewLine;
+                    }
+                    else if (line.TrimStart().StartsWith("/*"))
+                    {
+                        multilineComment += line + Environment.NewLine;
+                        isInMultilineComment = true;
                     }
                     else if (line.Length > 0 || isBody)
                     {
@@ -218,7 +239,7 @@ namespace XmlRefactor
                     }
                 }
 
-                string newSource = usingLines.TrimStart() + macroLines.TrimStart() + xmlDocLines.TrimStart() + rearrangedAttribs + theRest.Trim();
+                string newSource = usingLines.TrimStart() + macroLines.TrimStart() + multilineComment.TrimStart()+ xmlDocLines.TrimStart() + rearrangedAttribs + theRest.Trim();
                 _input = _input.Replace(source, newSource);
                 Hits++;
                 
