@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using System.Threading;
+using dotenv.net;
 
 namespace XmlRefactor
 {
@@ -17,6 +18,8 @@ namespace XmlRefactor
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Properties.Settings _settings = XmlRefactor.Properties.Settings.Default;
+            
+            DotEnv.Load();
 
             if (args == null || args.Length == 0)
             {

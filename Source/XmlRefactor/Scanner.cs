@@ -24,7 +24,7 @@ namespace XmlRefactor
             
             if (Directory.Exists(path))
             {
-                files = System.IO.Directory.GetFiles(path, "*.xml");
+                files = System.IO.Directory.GetFiles(path, "WHS*.xml");
                 
                 foreach (string file in files)
                 {
