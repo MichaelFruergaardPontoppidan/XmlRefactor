@@ -130,9 +130,11 @@ namespace XmlRefactor
 
                 }
                 newLayout += "\r\n]\r\n";
+                newLayout = newLayout.Replace("SysProductAreaAttribute", "XXXSysProductAreaAttributXXX");  // To avoid the next replacements
                 newLayout = newLayout.Replace("Attribute(", "(");
                 newLayout = newLayout.Replace("Attribute\r\n]", "\r\n]");
                 newLayout = newLayout.Replace("Attribute,", ",");
+                newLayout = newLayout.Replace("XXXSysProductAreaAttributXXX", "SysProductAreaAttribute");  // To bring it back
                 newLayout = newLayout.Replace("        ", "    ");
 
                 if (attributesFound == 1)
@@ -162,7 +164,8 @@ namespace XmlRefactor
                 string theRest = string.Empty;
                 string multilineComment = string.Empty;
                 HashSet<string> usingStatements = new HashSet<string>();
-                foreach (var line in source.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
+                string updatedSource = source.Replace(";[", ";"+ Environment.NewLine + "["); // Ensure newline before attributes
+                foreach (var line in updatedSource.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
                 {
                     if (isInMultilineComment)
                     {
@@ -196,7 +199,7 @@ namespace XmlRefactor
                     {
                         xmlDocLines += line.TrimStart() + Environment.NewLine;
                     }
-                    else if (line.TrimStart().StartsWith("/*"))
+                    else if (!isBody && line.TrimStart().StartsWith("/*"))
                     {
                         multilineComment += line + Environment.NewLine;
                         isInMultilineComment = true;
