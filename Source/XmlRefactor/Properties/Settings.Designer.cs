@@ -34,5 +34,35 @@ namespace XmlRefactor.Properties {
                 this["DirectoryPath"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string RuleToRun
+        {
+            get
+            {
+                return ((string)(this["RuleToRun"]));
+            }
+            set
+            {
+                this["RuleToRun"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string RuleParameter
+        {
+            get
+            {
+                return ((string)(this["RuleParameter"]));
+            }
+            set
+            {
+                this["RuleParameter"] = value;
+            }
+        }
     }
 }

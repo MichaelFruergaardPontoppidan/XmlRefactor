@@ -48,7 +48,7 @@ namespace XmlRefactor
         }
 
         private void populateRules()
-        {
+        {           
             Assembly assembly = Assembly.GetExecutingAssembly();
             foreach (Type type in assembly.GetTypes())
             {
@@ -57,7 +57,16 @@ namespace XmlRefactor
                     isTypeRule(type))                    
                 {
                     Rule rule = (Rule) assembly.CreateInstance(type.FullName);
-                    RulesCtrl.Items.Add(rule, rule.Enabled());
+                    rule.Settings = _settings;
+                    if (_settings.RuleToRun != String.Empty)
+                    {
+                        var ruleType = rule.GetType();
+                        RulesCtrl.Items.Add(rule, ruleType.Name == _settings.RuleToRun);
+                    }
+                    else
+                    {
+                        RulesCtrl.Items.Add(rule, rule.Enabled());
+                    }
                 }
             }
         }
@@ -90,16 +99,26 @@ namespace XmlRefactor
             commit = CommitCtrl.Text == "Yes";
             endSignalReceived = false;
             Result.Items.Clear();
+            rules = this.getRulesToRun();
+            thread.Start();
+            timer1.Start();
+            Go.Text = "Stop";
+        }
+
+        public List<Rule> getRulesToRun()
+        {
             rules = new List<Rule>();
+
+            
             foreach (Rule rule in RulesCtrl.CheckedItems)
             {
                 rule.Init();
                 rules.Add(rule);
             }
-            thread.Start();
-            timer1.Start();
-            Go.Text = "Stop";
+
+            return rules;
         }
+
 
         void threadStart()
         {

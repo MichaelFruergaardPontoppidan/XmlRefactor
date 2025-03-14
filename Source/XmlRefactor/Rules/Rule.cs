@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
+using XmlRefactor.Properties;
 
 namespace XmlRefactor
 {
@@ -10,11 +12,10 @@ namespace XmlRefactor
         private XmlMatch priv_xpoMatch;
         private string now = ( (int) System.DateTime.Now.TimeOfDay.TotalSeconds).ToString();
         int hits = 0;
-        public int Hits
-        {
-            get { return hits; }
-            set { hits = value; }
-        }
+        internal Settings Settings { get; set; }
+
+        public int Hits { get; set; }
+        
         protected string logFileName()
         {
             string s = @"c:\temp\log_" + this.RuleName() + "_" + now + ".txt";

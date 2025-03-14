@@ -44,15 +44,24 @@ namespace XmlRefactor
             return this.Run(_input, 0);
         }
 
-        const string flightToRemove = "WHSUseReturnDetailConfigurationProviderFlight";
+        private string getFlightToRemove()
+        { 
+            if (Settings.RuleParameter != String.Empty)
+                return Settings.RuleParameter;
+
+            return "WHSUseReturnDetailConfigurationProviderFlight"; 
+        }
 
         public string Run(string _input, int _startAt = 0)
         {
+            string flightToRemove = this.getFlightToRemove();
+
             if (Scanner.FILENAME.EndsWith(flightToRemove + ".xml", StringComparison.OrdinalIgnoreCase))
             {
                 //Skip the flight class itself
                 return _input;
             }
+
             Match match = xpoMatch.Match(_input, _startAt);
             if (match.Success)
             {
