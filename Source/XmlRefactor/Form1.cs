@@ -36,37 +36,19 @@ namespace XmlRefactor
         private int occurrences;
         private Settings _settings = XmlRefactor.Properties.Settings.Default;
 
-        private bool isTypeRule(Type type)
-        {
-            if (type.Name == "Rule")
-                return true;
-
-            if (type.BaseType != null)
-                return isTypeRule(type.BaseType);
-
-            return false;
-        }
-
         private void populateRules()
-        {           
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            foreach (Type type in assembly.GetTypes())
-            {
-                if (type.IsClass &&
-                    !type.IsAbstract &&
-                    isTypeRule(type))                    
+        {
+            var rules = Rule.AllRules(_settings);
+            foreach (Rule rule in rules)
+            { 
+                if (_settings.RuleToRun != String.Empty)
                 {
-                    Rule rule = (Rule) assembly.CreateInstance(type.FullName);
-                    rule.Settings = _settings;
-                    if (_settings.RuleToRun != String.Empty)
-                    {
-                        var ruleType = rule.GetType();
-                        RulesCtrl.Items.Add(rule, ruleType.Name == _settings.RuleToRun);
-                    }
-                    else
-                    {
-                        RulesCtrl.Items.Add(rule, rule.Enabled());
-                    }
+                    var ruleType = rule.GetType();
+                    RulesCtrl.Items.Add(rule, ruleType.Name == _settings.RuleToRun);
+                }
+                else
+                {
+                    RulesCtrl.Items.Add(rule, rule.Enabled());
                 }
             }
         }
