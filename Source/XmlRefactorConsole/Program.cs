@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System;
+using System.Reflection;
 using System.Text;
 using XmlRefactor;
 
@@ -18,7 +20,7 @@ class Program
             return;
         }
 
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+//        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         GlobalLib lib = new GlobalLib();
 
@@ -59,4 +61,3 @@ class Program
     }
 
 }
-
