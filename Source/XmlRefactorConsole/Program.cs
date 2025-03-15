@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Reflection;
-using System.Text;
+using System.Diagnostics;
 using XmlRefactor;
 
 class Program
@@ -42,22 +42,29 @@ class Program
         rule.Settings = lib.settings;
         rules.Add(rule);
 
+        Stopwatch timer = new Stopwatch();
+        timer.Start();
         Scanner scanner = new Scanner();
         scanner.Run(lib.settings.DirectoryPath, true, rules, UpdateResults, UpdateProgress, SignalEnd);
+        timer.Stop();
+        Console.WriteLine($"Completed in {timer.Elapsed.ToString()}. Scanned {scannedFiles} files and found {hits} in {files} files." );
     }
+
+    static int hits = 0, files = 0, scannedFiles = 0;
     static void UpdateResults(ResultItem item)
     {
-        Console.WriteLine($"Updated file {item.filename}");
-
+        Console.WriteLine($"Updated {item.filename}");
+        files++;
+        hits += item.hits;
     }
+
     static void UpdateProgress(string filename)
     {
-        Console.WriteLine($"Scanning {filename}");
-
+        scannedFiles++;
+     //   Console.WriteLine($"Scanning {filename}");
     }
     static void SignalEnd()
     {
-        Console.WriteLine("Completed");
     }
 
 }

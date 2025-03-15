@@ -34,14 +34,40 @@ namespace XmlRefactor
                 string[] folders = System.IO.Directory.GetDirectories(path);
                 foreach (string folder in folders)
                 {
-                    if (!folder.ToLowerInvariant().Contains("xppmetadata"))
+                    string folderLower = folder.ToLowerInvariant();
+                    if (!folderLower.Contains("xppmetadata"))
                     {
-                        scanFolder(folder);
+                        if (!onlyScanXppFolders ||
+                            !folderLower.Contains("ax") ||
+                            folderLower.Contains("axclass") ||
+                            folderLower.Contains("axtable") ||
+                            folderLower.Contains("axform") ||
+                            folderLower.Contains("axquery") ||
+                            folderLower.Contains("axmacro") ||
+                            folderLower.Contains("axview") ||
+                            folderLower.Contains("axdataentity") ||
+                            folderLower.Contains("axmap") 
+                            )
+                        {
+                            scanFolder(folder);
+                        }
+
                     }
                 }
             }
         }
         public static string FILENAME;
+
+        private bool onlyScanXppFolders = false;
+        private bool allRulesAreXppRules()
+        {
+            foreach (Rule rule in rules)
+            {
+                if (!rule.IsXppRule())
+                    return false;
+            }
+            return true;
+        }
 
         void scanFile(string filename)
         {
@@ -103,6 +129,7 @@ namespace XmlRefactor
             resultCallback = resultDelegate;
             progressCallback = progressDelegate;
             signalEndCallback = signalEndDelegate;
+            onlyScanXppFolders = this.allRulesAreXppRules();
             this.scanFolder(path);
             signalEndCallback();
         }

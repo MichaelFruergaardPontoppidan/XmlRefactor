@@ -39,13 +39,21 @@ namespace XmlRefactor
         protected virtual void buildXpoMatch()
         {
         }
+
+        private string mustContainLower = string.Empty;
+        private bool skipInited = false;
         
         virtual public bool skip(string input)
         {
-            string mustContain = this.mustContain().ToLower();
-            if (mustContain != String.Empty)
+            if (!skipInited)
             {
-                return !input.ToLower().Contains(mustContain);
+                mustContainLower = this.mustContain().ToLower();
+                skipInited = true;
+            }
+            
+            if (mustContainLower != String.Empty)
+            {
+                return !input.ToLower().Contains(mustContainLower);
             }
             return false;
         }
@@ -73,7 +81,11 @@ namespace XmlRefactor
         {
             return false;
         }
-        
+        virtual public bool IsXppRule()
+        {
+            return false;
+        }
+
         protected string breakString(string input, string s1, string s2)
         {
             int pos;

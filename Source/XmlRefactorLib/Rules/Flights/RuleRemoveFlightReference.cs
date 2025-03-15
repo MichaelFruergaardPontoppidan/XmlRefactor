@@ -12,7 +12,7 @@ namespace XmlRefactor
 {
     class RuleRemoveFlightReference : Rule
     {
-        HashSet<string> methodsToDelete = new HashSet<string>();
+        private string flightToRemove = String.Empty;
 
         public RuleRemoveFlightReference()
         {
@@ -32,6 +32,11 @@ namespace XmlRefactor
         {
             return "Flights";
         }
+        override public bool IsXppRule()
+        {
+            return true;
+        }
+
         protected override void buildXpoMatch()
         {
             xpoMatch.AddXMLStart("Source", false);
@@ -44,6 +49,16 @@ namespace XmlRefactor
             return this.Run(_input, 0);
         }
 
+        public override string mustContain()
+        {
+            if (flightToRemove == string.Empty)
+            {
+                flightToRemove = this.getFlightToRemove();
+            }
+
+            return flightToRemove;
+        }
+
         private string getFlightToRemove()
         { 
             if (Settings.RuleParameter != String.Empty)
@@ -53,9 +68,7 @@ namespace XmlRefactor
         }
 
         public string Run(string _input, int _startAt = 0)
-        {
-            string flightToRemove = this.getFlightToRemove();
-
+        {  
             if (Scanner.FILENAME.EndsWith(flightToRemove + ".xml", StringComparison.OrdinalIgnoreCase))
             {
                 //Skip the flight class itself
@@ -65,7 +78,7 @@ namespace XmlRefactor
             Match match = xpoMatch.Match(_input, _startAt);
             if (match.Success)
             {
-                string sourceCode = match.Groups[1].Value;// _input.Substring(match.Index, match.Length);
+                string sourceCode = match.Groups[1].Value;
                 string flightEnabledCall = flightToRemove + "::instance().isenabled()";
                 if (sourceCode.IndexOf(flightEnabledCall, StringComparison.OrdinalIgnoreCase)>0)
                 {
