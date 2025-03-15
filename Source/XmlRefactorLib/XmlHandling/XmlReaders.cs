@@ -7,7 +7,7 @@ using System.Text;
 namespace XmlRefactor
 {
 	/// <summary>
-	/// A class to read the contents of an xpo file.
+	/// A class to read the contents of an xml file.
 	/// It will remove header information and find dependencies
 	/// </summary> 
 	
@@ -37,9 +37,9 @@ namespace XmlRefactor
         }
 
 		/// <summary>
-		/// Constructor of the Xpo reader class
+		/// Constructor of the Xml reader class
 		/// </summary>
-		/// <param name="file">Xpo file to read</param>
+		/// <param name="file">Xml file to read</param>
 		public XmlReader(string file)
 		{
 			//Open file and read contents
@@ -66,11 +66,11 @@ namespace XmlRefactor
                     }
                     else
                     {
-                        fileEncoding = Encoding.GetEncoding(1252); // all existing XPO files should be in 1252. Danish ones will be a problem.
+                        fileEncoding = Encoding.GetEncoding(1252); // all existing XML files should be in 1252. Danish ones will be a problem.
                         text = fileEncoding.GetString(binaryContent, 0, binaryContent.Length);
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     text = "";
                 }

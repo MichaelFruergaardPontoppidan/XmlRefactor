@@ -11,7 +11,6 @@ namespace XmlRefactor
 {
     static class Program
     {
-
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -41,7 +40,6 @@ namespace XmlRefactor
                 {
                     _settings.RuleParameter = args[2];
                 }
-                Console.WriteLine("XmlRefactor running silent mode");
 
                 _settings.Save();
                 Form1 f = new Form1();

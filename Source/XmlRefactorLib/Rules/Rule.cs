@@ -130,5 +130,12 @@ namespace XmlRefactor
 
             return false;
         }
+
+        public static Rule createRuleFromClassName(string name)
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            String fullName = "XmlRefactor." + name;
+            return assembly.CreateInstance(fullName) as Rule;
+        }
     }
 }

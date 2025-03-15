@@ -17,7 +17,7 @@ namespace XmlRefactor
         public GlobalLib()
         {
             DotEnv.Load();
-
+       //     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         }
 
