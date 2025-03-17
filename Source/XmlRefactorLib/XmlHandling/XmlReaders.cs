@@ -16,21 +16,7 @@ namespace XmlRefactor
         public Encoding fileEncoding;
 		private UTF8Encoding utf8Encoding = new UTF8Encoding(true, true); // turn on BOM and error checking
 		private string text;
-		private char[] bufferText;
-		/// <summary>
-		/// The contents of the file with header information removed
-		/// </summary>
-		//public char[] Text
-		//{
-		//	get
-		//	{
-		//		return bufferText;
-		//	}
-		//}
-        public char[] TextAsCharArray()
-        {
-            return bufferText;
-        }
+
         public string Text()
         {
             return text;
@@ -74,7 +60,6 @@ namespace XmlRefactor
                 {
                     text = "";
                 }
-				bufferText = text.ToCharArray();
 			
 			}			
 			finally

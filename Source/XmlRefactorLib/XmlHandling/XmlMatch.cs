@@ -54,7 +54,7 @@ namespace XmlRefactor
         }
         public void AddOneOfLiterals(string literal1, string literal2)
         {
-            builder.Append($"{literal1}|{literal2}");
+            builder.Append($"({literal1}|{literal2})");
         }
         public void AddCapture()
         {

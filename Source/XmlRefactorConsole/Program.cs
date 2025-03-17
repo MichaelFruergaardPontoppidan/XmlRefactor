@@ -44,7 +44,7 @@ class Program
 
             Stopwatch timer = new Stopwatch();
             timer.Start();
-            Scanner scanner = new Scanner();
+            Scanner scanner = new Scanner();        
             scanner.Run(lib.settings.DirectoryPath, true, rules, UpdateResults, UpdateProgress, SignalEnd);
             timer.Stop();
             Console.Write("\r" + new string(' ', Console.BufferWidth - 1));
@@ -54,7 +54,8 @@ class Program
         }
         catch (Exception e)
         {
-            Console.WriteLine("\r" + new string(' ', Console.BufferWidth-1));
+            Console.WriteLine();
+            Console.WriteLine($"\rFile being processed: "+Scanner.FILENAME);
             Console.WriteLine($"\rException: "+e.ToString());
             return 10000;
         }
@@ -66,9 +67,7 @@ class Program
 
     static int hits = 0, files = 0, scannedFiles = 0;
     static void UpdateResults(ResultItem item)
-    {
-        Console.Write("\r"+new string(' ', Console.BufferWidth-1));
-
+    {        
         Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine($"\rUpdated {item.filename}");
         files++;
@@ -78,12 +77,10 @@ class Program
     static void UpdateProgress(string filename)
     {
         scannedFiles++;
-        if (scannedFiles % 1000 == 0)
+        if (scannedFiles % 10000 == 0)
         {
-            Console.Write("\r" + new string(' ', Console.BufferWidth-1)); 
             Console.ForegroundColor = ConsoleColor.DarkGray;
-
-            Console.Write($"\rScanning {filename}");
+            Console.Write($"\rScanned {scannedFiles} files            ");
         }
     }
     static void SignalEnd()

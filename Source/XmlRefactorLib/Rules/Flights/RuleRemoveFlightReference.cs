@@ -129,6 +129,7 @@ namespace XmlRefactor
             XmlMatch m = new XmlMatch();
             m.AddCommaOptional();
             m.AddWhiteSpace();
+            //m.AddLiteral("SysTestFeatureDependency");
             m.AddOneOfLiterals("SysTestFeatureDependency", "SysTestCaseFlightDependency");
             m.AddStartParenthesis();
             m.AddLiteral("classStr");
@@ -145,7 +146,7 @@ namespace XmlRefactor
             Match match = m.Match(sourceCode);
             if (match.Success)
             {
-                string onOff = match.Groups[1].Value;
+                string onOff = match.Groups[2].Value;
 
                 switch (onOff.ToLower())
                 {
@@ -208,6 +209,7 @@ namespace XmlRefactor
                     case "Source":
                     case "Declaration":
                         string sourceCode = MetaData.extractPreviousXMLElement(containingXMLElement, match.Index, _input);
+                        int sourcePos = _input.IndexOf(sourceCode);
                         sourceCode = sourceCode.Replace("<![CDATA[" + Environment.NewLine, "");
                         sourceCode = sourceCode.Replace(Environment.NewLine + Environment.NewLine + "]]>", "");
 
@@ -226,7 +228,7 @@ namespace XmlRefactor
                             }
 
                             Hits++;
-                            return this.Run(updatedInput, match.Index + flightToRemove.Length);
+                            return this.Run(updatedInput, sourcePos);
                         }
 
                         if (sourceCode.IndexOf(flightToRemove, StringComparison.OrdinalIgnoreCase) > 0)
