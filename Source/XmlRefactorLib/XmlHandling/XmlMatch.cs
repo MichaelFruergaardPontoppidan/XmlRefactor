@@ -45,14 +45,16 @@ namespace XmlRefactor
         }
         public void AddSymbol(string symbol, int count = 1)
         {
-            
             for (int i = 1 ; i<=count; i++)
                 builder.Append(@"[\"+symbol+"]");
-            
         }
         public void AddLiteral(string literal)
         {
             builder.Append(literal);
+        }
+        public void AddOneOfLiterals(string literal1, string literal2)
+        {
+            builder.Append($"{literal1}|{literal2}");
         }
         public void AddCapture()
         {
@@ -104,6 +106,11 @@ namespace XmlRefactor
         {
             this.AddWhiteSpace();
             builder.Append("[,]");
+        }
+        public void AddCommaOptional()
+        {
+            this.AddWhiteSpace();
+            builder.Append("[,]?");
         }
         public void AddNewLine()
         {

@@ -267,6 +267,36 @@ namespace XmlRefactor
             return path;
         }
 
+        public static string XMLGetElementNameBeforeIndex(string xml, int position)
+        {
+            if (string.IsNullOrEmpty(xml) || position < 0 || position >= xml.Length)
+            {
+                throw new ArgumentException("Invalid input.");
+            }
+
+            string closestElementName = null;
+
+            for (int i = position - 1; i >= 0; i--)
+            {
+                int lineStart = xml.LastIndexOf('\n', i);
+                int lineEnd = xml.IndexOf('\n', lineStart + 1);
+
+                if (lineStart == -1) lineStart = 0;
+                if (lineEnd == -1) lineEnd = xml.Length;
+
+                string line = xml.Substring(lineStart, lineEnd - lineStart).Trim();
+
+                if (line.StartsWith("<"))
+                {
+                    string elementName = line.Substring(1, line.IndexOf('>') - 1);
+                    closestElementName = elementName;
+                    break;
+                }
+            }
+
+            return closestElementName;
+        }
+
 
         public static string extractPreviousXMLElement(string name, int pos, string source)
         {
