@@ -51,7 +51,6 @@ namespace XmlRefactor
                         {
                             scanFolder(folder);
                         }
-
                     }
                 }
             }
