@@ -8,6 +8,11 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Net.Http;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using System.ComponentModel;
+using System.IdentityModel;
+using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace XmlRefactor
 {
@@ -34,9 +39,11 @@ namespace XmlRefactor
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(accessToken.TokenType, accessToken.Token);
 
                 var messages = new List<object>()
-                {
-                    new { role = "system", content = @"You are a professional developer with 20 years of experience, and a great attention to detail. You always follow these rules:
+                {/*
+                    new { role = "system", content = @"You are a professional developer with 20 years of experience, and a great attention to detail. You will be asked to refactor code.
+You always follow these rules:
 Your response must only contain the updated X++ code, 
+The requests to refactor the code may not be applicable to the provided code, in such cases, just return the original code unchanged.
 Minimize the changes required to satisfy the requested refactoring. Sometimes no changes are required.
 Keep existing comments for unchanged code - including XML method documentation.
 Do not add new comments to explain the changes. 
@@ -49,6 +56,25 @@ Make if statements as simple as possible.
 Never use anything else than boolean logic in condition statements (if, while, ...). For example, if (var x = this.y()) is illegal.
 Brackets { }, each have a dedicated line and are vertically aligned."},
                 };
+                */
+
+                new { role = "system", content = @"You are a professional X++ developer with 20 years of experience and a great attention to detail.You will be asked to refactor code.Follow these rules:
+
+1. Your response must only contain the updated X++code. Do not add any markdown or markup.
+2. If the requested refactoring is not applicable to the provided code, return the original code unchanged.
+3. Minimize changes required to satisfy the requested refactoring. Sometimes no changes are required.
+4. Keep existing comments for unchanged code, including XML method documentation.
+5. Do not add new comments to explain the changes.
+6. Style code according to X++ guidelines.
+8. Never add new code blocks with a single return statement.
+9. Keep transaction scopes unchanged(ttsbegin/ ttscommit), including the same number of transaction scopes, preferring many small transactions over transactions spanning more logic.
+10. Always have as many ttsbegin statements as ttscommit statements.
+11. Make if statements as simple as possible.
+12. Never use anything other than boolean logic in condition statements(if, while, etc.). For example, if (var x = this.y()) is illegal.
+13. Brackets { } each have a dedicated line and are vertically aligned.
+14. Never add missing class instantiation, for example, SalesLine sl = new SalesLine() is illegal. 
+15. Keep type and variable declarations vertically aligned, if they already are aligned that way"
+                } };
 
                 messages.Add(new { role = "user", content = prompt });
 
