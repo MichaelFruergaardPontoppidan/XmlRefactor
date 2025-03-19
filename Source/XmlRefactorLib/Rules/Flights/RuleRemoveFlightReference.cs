@@ -214,12 +214,35 @@ namespace XmlRefactor
             }
             throw new Exception($"Unable to delete method: {methodName} from file {Scanner.FILENAME}");
         }
+        private string GetFirstLine(string multilineString)
+        {
+            int newlineIndex = multilineString.IndexOf('\n');
+            if (newlineIndex == -1)
+            {
+                return multilineString; // The string is a single line
+            }
+            return multilineString.Substring(0, newlineIndex);
+        }
 
 
         private string pruneSourceForLLM(string originalSource)
         {
             string sourceCode = originalSource.Replace("<![CDATA[" + Environment.NewLine, "");
             sourceCode = sourceCode.Replace(Environment.NewLine + Environment.NewLine + "]]>", "");
+
+
+            do
+            {
+                string firstLine = GetFirstLine(sourceCode);
+                if (firstLine.Trim().StartsWith("///"))
+                {
+                    sourceCode = sourceCode.Remove(0, firstLine.Length+1);
+                }
+                else
+                {
+                    break;
+                }
+            } while (true);
 
             XmlMatch m = new XmlMatch();
 
