@@ -29,18 +29,20 @@ namespace XmlRefactor
             builder = new StringBuilder(100);            
         }
         public void AddWhiteSpaceRequired()
-        {
-            //include this line when running commit
+        {            
             builder.Append(@"[\s]+");
         }
         public void AddDelimter()
         {
             builder.Append(@"[\,\(\[\s]+");
         }
+        public void AddWhiteSpaceNoLineBreaksRequired()
+        {
+            builder.Append(@"[ \t]+");
+        }
 
         public void AddWhiteSpace()
         {
-            //include this line when running commit
             builder.Append(@"[\s]*");  
         }
         public void AddSymbol(string symbol, int count = 1)

@@ -79,9 +79,27 @@ namespace XmlRefactor
             if (sourceCode.IndexOf(flightEnabledCall, StringComparison.OrdinalIgnoreCase) > 0)
             {
                 string sourceCodeToRefactor = Regex.Replace(sourceCode, flightEnabledCall.Replace("(", "\\(").Replace(")", "\\)"), "true", RegexOptions.IgnoreCase);
-
-                string newCode = LLM.prompt("Remove unreachable code", sourceCodeToRefactor);
+                
+                string newCode = sourceCodeToRefactor;
                 if (newCode.Contains(" if"))
+                {
+                    newCode = LLM.prompt(@"
+                        If possible, simplify boolean logic in IF, WHERE and WHILE conditions. You can only change the condition block in statements. 
+                        Examples:
+                        if (a && true) becomes if (a)
+                        if (a && false) becomes if (false)
+                        if (a || true) becomes if (true)
+                        if (a && !true) becomes if (false)
+                        while (a && !true) becomes while (false)
+                        if (a || b || true)) becomes if (a || b)
+                        ", sourceCodeToRefactor);
+                }
+                newCode = LLM.prompt("Remove unreachable code", newCode);
+                if (newCode.Count(c => c == '\n') < 10)
+                {
+                    newCode = LLM.prompt("Remove unnessesary variables without reducing code readability. Follow clean code principles.", newCode);
+                }
+                /*
                 {
                     string newCode2 = LLM.prompt("Without introducing new return statements, simplify conditional logic keeping all semantics intact; if not possible, return the code unchanged.", newCode);
 
@@ -92,7 +110,6 @@ namespace XmlRefactor
                         newCode = newCode2;
                     }
                 }
-
                 newCode = LLM.prompt(@"If any lines contain just a variable declaration then move the type declaration to the first line where the variable is assigned." +
                     "For example: " +
                     "int myInt;" +
@@ -100,6 +117,7 @@ namespace XmlRefactor
                     "becomes" +
                     "int myInt = 5;" +
                     "Do not change any other variants of variable declarations or usage", newCode);
+                */
 
                 newCode = newCode.Replace("\r", String.Empty); //Typically none
                 newCode = newCode.Replace("\n", Environment.NewLine);
@@ -112,6 +130,7 @@ namespace XmlRefactor
                     newCode = newCode.Replace(Environment.NewLine, Environment.NewLine + new string(' ', indentation));
                     newCode = new string(' ', indentation) + newCode;
                 }
+
                 return newCode;
             }
 
@@ -151,7 +170,13 @@ namespace XmlRefactor
                 switch (onOff.ToLower())
                 {
                     case "true":
-                        string updatedSource = sourceCode.Remove(match.Index, match.Length);
+                        int length = match.Length;
+                        string trimmedValue = match.Value.Trim();
+                        if (trimmedValue.StartsWith(",") && trimmedValue.EndsWith(","))
+                        {
+                            length = match.Value.LastIndexOf(",");
+                        }
+                        string updatedSource = sourceCode.Remove(match.Index, length);
                         return updatedSource;
 
                     case "false":
@@ -190,6 +215,64 @@ namespace XmlRefactor
             throw new Exception($"Unable to delete method: {methodName} from file {Scanner.FILENAME}");
         }
 
+
+        private string pruneSourceForLLM(string originalSource)
+        {
+            string sourceCode = originalSource.Replace("<![CDATA[" + Environment.NewLine, "");
+            sourceCode = sourceCode.Replace(Environment.NewLine + Environment.NewLine + "]]>", "");
+
+            XmlMatch m = new XmlMatch();
+
+            m.AddWhiteSpaceNoLineBreaksRequired();
+            m.AddLiteral("if");            
+            m.AddStartParenthesis();
+            m.AddLiteral(flightToRemove);
+            m.AddDoubleColon();
+            m.AddLiteral("instance");
+            m.AddStartParenthesis();
+            m.AddEndParenthesis();
+            m.AddDot();
+            m.AddLiteral("isEnabled");
+            m.AddStartParenthesis();
+            m.AddEndParenthesis();
+            Match match = m.Match(sourceCode);
+            if (match.Success)
+            {
+                sourceCode = sourceCode.Remove(0, match.Index);
+                int startIndentation = this.CountLeadingSpaces(sourceCode);
+                var lines = sourceCode.Replace("\r", "").Split('\n');
+                string newSource = string.Empty;
+                bool endBracket = false;
+                foreach (string line in lines)
+                {
+                    int indentation = this.CountLeadingSpaces(line);
+                    if (indentation >= startIndentation || line.Trim().Length == 0)
+                    {
+                        if (endBracket &&
+                            indentation == startIndentation &&
+                            !line.Contains("else"))
+                        {
+                            // After the end bracket, break, unless an else block is coming.
+                            break;
+                        }
+                        newSource += line+'\n';
+                        endBracket = ((line.Trim() == "}" && indentation == startIndentation));
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                sourceCode = newSource.Replace("\n", "\r\n");
+            }
+            if (!originalSource.Contains(sourceCode))
+            {
+                throw new Exception("Unable to prune");
+            }
+
+            return sourceCode;
+        }
+
         public string Run(string _input, int _startAt = 0)
         {  
             if (Scanner.FILENAME.EndsWith(flightToRemove + ".xml", StringComparison.OrdinalIgnoreCase))
@@ -210,8 +293,7 @@ namespace XmlRefactor
                     case "Declaration":
                         string sourceCode = MetaData.extractPreviousXMLElement(containingXMLElement, match.Index, _input);
                         int sourcePos = _input.IndexOf(sourceCode);
-                        sourceCode = sourceCode.Replace("<![CDATA[" + Environment.NewLine, "");
-                        sourceCode = sourceCode.Replace(Environment.NewLine + Environment.NewLine + "]]>", "");
+                        sourceCode = this.pruneSourceForLLM(sourceCode);
 
                         string updatedSource = this.rewriteSource(sourceCode);
 
@@ -224,6 +306,10 @@ namespace XmlRefactor
                             }
                             else
                             {
+                                if (sourceCode.EndsWith(Environment.NewLine) && !updatedSource.EndsWith(Environment.NewLine))
+                                {
+                                    updatedSource += Environment.NewLine;
+                                }
                                 updatedInput = _input.Replace(sourceCode, updatedSource);
                             }
 
