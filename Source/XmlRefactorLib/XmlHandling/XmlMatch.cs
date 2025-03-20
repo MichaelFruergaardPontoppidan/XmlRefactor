@@ -28,123 +28,159 @@ namespace XmlRefactor
         {
             builder = new StringBuilder(100);            
         }
-        public void AddWhiteSpaceRequired()
+        public XmlMatch AddWhiteSpaceRequired()
         {            
             builder.Append(@"[\s]+");
+            return this;
         }
-        public void AddDelimter()
+        public XmlMatch AddDelimter()
         {
             builder.Append(@"[\,\(\[\s]+");
+            return this;
         }
-        public void AddWhiteSpaceNoLineBreaksRequired()
+        public XmlMatch AddWhiteSpaceNoLineBreaksRequired()
         {
             builder.Append(@"[ \t]+");
+            return this;
         }
 
-        public void AddWhiteSpace()
+        public XmlMatch AddWhiteSpace()
         {
             builder.Append(@"[\s]*");  
+            return this;
         }
-        public void AddSymbol(string symbol, int count = 1)
+        public XmlMatch AddSymbol(string symbol, int count = 1)
         {
             for (int i = 1 ; i<=count; i++)
                 builder.Append(@"[\"+symbol+"]");
+            return this;
         }
-        public void AddLiteral(string literal)
+        public XmlMatch AddLiteral(string literal)
         {
             builder.Append(literal);
+            return this;
         }
-        public void AddOneOfLiterals(string literal1, string literal2)
+        public XmlMatch AddOneOfLiterals(string literal1, string literal2)
         {
             builder.Append($"({literal1}|{literal2})");
+            return this;
         }
-        public void AddCapture()
+        public XmlMatch AddCapture()
         {
             this.AddWhiteSpace();
             builder.Append(@"([\S]+?)");
+            return this;
         }
-        public void AddCaptureWord()
+        public XmlMatch AddCaptureWord()
         {
             builder.Append(@"([\w]+?)");
+            return this;
         }
 
-        public void AddCaptureAnything()
+        public XmlMatch AddCaptureAnything()
         {
             this.AddWhiteSpace();
             builder.Append(@"([\S\s]+?)");
+            return this;
         }
-        public void AddCaptureOptional()
+        public XmlMatch AddCaptureOptional()
         {
             this.AddWhiteSpace();
             builder.Append(@"([\S]?)");            
+            return this;
         }
-        public void AddCaptureOptional(string literal)
+        public XmlMatch AddCaptureOptional(string literal)
         {
             this.AddWhiteSpace();
             builder.Append("("+literal+")?");            
+            return this;
         }
-        public void AddStartBracket()
+        public XmlMatch AddStartBracket()
         {
             this.AddWhiteSpace();
             builder.Append(@"[\[]");
+            return this;
         }
-        public void AddEndBracket()
+        public XmlMatch AddEndBracket()
         {
             this.AddWhiteSpace();
             builder.Append(@"[\]]");
+            return this;
+        }
+        public XmlMatch AddStartCurlyBracket()
+        {
+            this.AddWhiteSpace();
+            builder.Append(@"[{]");
+            return this;
+        }
+        public XmlMatch AddEndCurlyBracket()
+        {
+            this.AddWhiteSpace();
+            builder.Append(@"[}]");
+            return this;
         }
 
-        public void AddStartParenthesis()
+        public XmlMatch AddStartParenthesis()
         {
             this.AddWhiteSpace();
             builder.Append(@"[(]");            
+            return this;
         }
-        public void AddEndParenthesis()
+        public XmlMatch AddEndParenthesis()
         {
             this.AddWhiteSpace();
             builder.Append("[)]");            
+            return this;
         }
-        public void AddComma()
+        public XmlMatch AddComma()
         {
             this.AddWhiteSpace();
             builder.Append("[,]");
+            return this;
         }
-        public void AddCommaOptional()
+        public XmlMatch AddCommaOptional()
         {
             this.AddWhiteSpace();
             builder.Append("[,]?");
+            return this;
         }
-        public void AddNewLine()
+        public XmlMatch AddNewLine()
         {
             this.AddWhiteSpace();
             builder.Append("[#]");
             this.AddWhiteSpace();
+            return this;
         }
-        public void AddSemicolon()
+        public XmlMatch AddSemicolon()
         {
             this.AddWhiteSpace();
             builder.Append("[;]");
+            return this;
         }
-        public void AddORSymbol()
+        public XmlMatch AddORSymbol()
         {
             this.AddWhiteSpace();
             builder.Append("[|][|]");
+            return this;
         }
-        public void AddDoubleColon()
+        public XmlMatch AddDoubleColon()
         {
             this.AddWhiteSpace();
             builder.Append("[:][:]");
+            return this;
         }
-        public void AddEqual()
+        public XmlMatch AddEqual()
         {
             builder.Append("[=]");
+            return this;
         }
-        public void AddDot()
+        public XmlMatch AddDot()
         {
             this.AddWhiteSpace();
             builder.Append("[.]");            
+            return this;
         }
-        public void AddXMLStart(string xml, Boolean allowAttributes = true)
+        public XmlMatch AddXMLStart(string xml, Boolean allowAttributes = true)
         {
             builder.Append(@"[<]");
             this.AddLiteral(xml);
@@ -154,25 +190,34 @@ namespace XmlRefactor
                 this.AddCaptureAnything();
             }
             builder.Append(@"[>]");
+            return this;
         }
 
-        public void AddXMLStartTag()
+        public XmlMatch AddXMLStartTag()
         {
             builder.Append(@"[<]");
+            return this;
         }
-        public void AddXMLEndTag()
+        public XmlMatch AddXMLEndTag()
         {
             builder.Append(@"[>]");
+            return this;
         }
 
-        public void AddXMLEnd(string xml)
+        public XmlMatch AddXMLEnd(string xml)
         {
             this.AddWhiteSpace();
             builder.Append(@"[<]");
             builder.Append(@"[/]");
             this.AddLiteral(xml);
             builder.Append(@"[>]");
+            return this;
         }
-
+        public XmlMatch addMatch(XmlMatch match)
+        {
+            builder.Append(match.builder.ToString());
+            return this;
+        }
+        
     }
 }

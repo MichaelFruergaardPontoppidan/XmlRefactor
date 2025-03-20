@@ -12,9 +12,11 @@ using System.Windows.Forms;
 
 namespace XmlRefactor
 {
+
     class RuleRemoveFlightReference : Rule
     {
         private string flightToRemove = String.Empty;
+        private List<RefactorReplaceParameters> referencesToDelete = new List<RefactorReplaceParameters>();
 
         public RuleRemoveFlightReference()
         {
@@ -82,21 +84,22 @@ namespace XmlRefactor
         private string rewriteTestAttributes(string sourceCode)
         {
             XmlMatch m = new XmlMatch();
-            m.AddCommaOptional();
-            m.AddWhiteSpace();
-            m.AddOneOfLiterals("SysTestFeatureDependency", "SysTestCaseFlightDependency");
-            m.AddStartParenthesis();
-            m.AddLiteral("classStr");
-            m.AddStartParenthesis();
-            m.AddLiteral(flightToRemove);
-            m.AddEndParenthesis();
-            m.AddComma();
-            m.AddWhiteSpace();
-            m.AddCaptureWord();
-            m.AddWhiteSpace();
-            m.AddEndParenthesis();
-            m.AddCommaOptional();
-            m.AddWhiteSpace();
+            m.AddCommaOptional()
+               .AddWhiteSpace()
+               .AddOneOfLiterals("SysTestFeatureDependency", "SysTestCaseFlightDependency")
+               .AddStartParenthesis()
+               .AddLiteral("classStr")
+               .AddStartParenthesis()
+               .AddLiteral(flightToRemove)
+               .AddEndParenthesis()
+               .AddComma()
+               .AddWhiteSpace()
+               .AddCaptureWord()
+               .AddWhiteSpace()
+               .AddEndParenthesis()
+               .AddCommaOptional()
+               .AddWhiteSpace();
+
             Match match = m.Match(sourceCode);
             if (match.Success)
             {
@@ -129,18 +132,18 @@ namespace XmlRefactor
         private string deleteMethod(string methodName, string sourceCode)
         {
             XmlMatch m = new XmlMatch();
-            m.AddXMLStart("Method", false);
-            m.AddWhiteSpace();
-            m.AddXMLStart("Name", false);
-            m.AddLiteral(methodName);
-            m.AddXMLEnd("Name");
-            m.AddWhiteSpace();
-            m.AddXMLStart("Source", false);
-            m.AddCaptureAnything();
-            m.AddXMLEnd("Source");
-            m.AddWhiteSpace();
-            m.AddXMLEnd("Method");
-            m.AddWhiteSpace();
+             m.AddXMLStart("Method", false)
+                .AddWhiteSpace()
+                .AddXMLStart("Name", false)
+                .AddLiteral(methodName)
+                .AddXMLEnd("Name")
+                .AddWhiteSpace()
+                .AddXMLStart("Source", false)
+                .AddCaptureAnything()
+                .AddXMLEnd("Source")
+                .AddWhiteSpace()
+                .AddXMLEnd("Method")
+                .AddWhiteSpace();
 
             Match match = m.Match(sourceCode);
             if (match.Success)
@@ -148,9 +151,120 @@ namespace XmlRefactor
                 return sourceCode.Remove(match.Index, match.Length);
             }
             throw new Exception($"Unable to delete method: {methodName} from file {Scanner.FILENAME}");
-        } 
+        }
 
+        private bool canMethodBeDeleted(string source)
+        {
+            //private boolean validateCleanUpMode(<optional>)
+            //{
+            //    return true;
+            //}
+
+            XmlMatch m = new XmlMatch();
+            m.AddLiteral("private")
+                .AddWhiteSpace()
+                .AddLiteral("boolean")
+                .AddWhiteSpace()
+                .AddCapture() // Method name
+                .AddStartParenthesis()
+                .AddCaptureOptional() // Parameters
+                .AddEndParenthesis()
+                .AddStartCurlyBracket()
+                .AddWhiteSpace()
+                .AddLiteral("return")
+                .AddWhiteSpace()
+                .AddCaptureWord() // true / false
+                .AddWhiteSpace()
+                .AddSemicolon()
+                .AddEndCurlyBracket()
+            ;
+            Match match = m.Match(source);
+            if (match.Success)
+            {
+                string methodName = match.Groups[1].Value;
+                string returnValue = match.Groups[3].Value;
+                if (returnValue == "true" || returnValue == "false")
+                {
+                    XmlMatch m2 = new XmlMatch();
+                    m2.AddLiteral("this").AddDot().AddLiteral(methodName).AddStartParenthesis().AddCaptureOptional().AddEndParenthesis();
+
+                    referencesToDelete.Add(
+                        new RefactorReplaceParameters()
+                        {
+                            TextToReplace = methodName,
+                            Replacement = returnValue,
+                            Match = m2
+                        });
+
+                    return true;
+                }
+            }
+            return false;
+        }
  
+
+        private string deleteReferences(string source, string methodName, string replacement)
+        {
+            return source;
+        }
+
+        private string PostRunForMethod(string sourceCode, RefactorReplaceParameters referenceToDelete)
+        {
+
+            string updatedSource = LLMCodeRefactorReplaceText.Replace(sourceCode, referenceToDelete);
+
+
+
+            return updatedSource;
+        }
+
+        public override string PostRun(string _input)
+        {
+            string source = _input;
+            foreach (var r in referencesToDelete)
+            {
+                XmlMatch m = new XmlMatch();
+                m.AddLiteral(r.TextToReplace);
+                int startPos = 0;
+
+                do
+                {
+                    Match match = m.Match(source, startPos);
+                    if (match.Success)
+                    {
+                        string containingXMLElement = MetaData.XMLGetElementNameBeforeIndex(source, match.Index);
+                        switch (containingXMLElement)
+                        {
+                            case "Source":
+                            case "Declaration":
+
+                                string sourceCode = MetaData.extractPreviousXMLElement(containingXMLElement, match.Index, _input);
+                                string updatedSourceCode = this.PostRunForMethod(sourceCode, r);
+
+                                if (updatedSourceCode != null)
+                                {
+                                    if (sourceCode.EndsWith(Environment.NewLine) && !updatedSourceCode.EndsWith(Environment.NewLine))
+                                    {
+                                        updatedSourceCode += Environment.NewLine;
+                                    }
+                                    source = source.Replace(sourceCode, updatedSourceCode);
+                                    Hits++;
+                                }
+                                break;
+                        }
+                        startPos = match.Index + match.Length;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                while (true);
+            }
+
+            return source;
+        }
+
         public string Run(string _input, int _startAt = 0)
         {  
             if (Scanner.FILENAME.EndsWith(flightToRemove + ".xml", StringComparison.OrdinalIgnoreCase))
@@ -174,17 +288,49 @@ namespace XmlRefactor
                         int sourcePos = _input.IndexOf(sourceCode);
                         
                         string flightEnabledCall = flightToRemove + "::instance().isenabled()";
-                        string updatedSource = LLMCodeRefactorReplaceText.ReplaceWithTrue(sourceCode, flightEnabledCall);
-                        if (updatedSource == null)
+                        XmlMatch m2 = new XmlMatch();
+
+                        m2.AddLiteral(flightToRemove)
+                            .AddDoubleColon()
+                            .AddLiteral("instance")
+                            .AddStartParenthesis()
+                            .AddEndParenthesis()
+                            .AddDot()
+                            .AddLiteral("isEnabled")
+                            .AddStartParenthesis()
+                            .AddEndParenthesis();
+
+                        var flightRefactorParameters = new RefactorReplaceParameters()
+                        {
+                            TextToReplace = flightEnabledCall,
+                            Replacement = "true",
+                            Match = m2
+                        };
+
+                        string updatedSource = LLMCodeRefactorReplaceText.Replace(sourceCode, flightRefactorParameters);
+
+                        bool canBeDeleted = false;
+                        string replacement = string.Empty;
+
+                        if (updatedSource != null)
+                        {
+                            canBeDeleted = this.canMethodBeDeleted(updatedSource);
+
+                            if (canBeDeleted)
+                            {
+                                updatedSource = String.Empty;
+                            }
+                        }
+                        else
                         {
                             updatedSource = this.rewriteSource(sourceCode);
                         }
 
                         if (updatedSource != null)
                         {
+                            string methodName = MetaData.extractPreviousXMLElement("Name", match.Index, _input);
                             if (updatedSource == String.Empty)
                             {
-                                string methodName = MetaData.extractPreviousXMLElement("Name", match.Index, _input);                                
                                 updatedInput = this.deleteMethod(methodName, _input);
                             }
                             else
@@ -197,6 +343,7 @@ namespace XmlRefactor
                             }
 
                             Hits++;
+                            
                             return this.Run(updatedInput, sourcePos);
                         }
 

@@ -13,7 +13,7 @@ namespace XmlRefactor
     {
         private XmlMatch priv_xpoMatch;
         private string now = ( (int) System.DateTime.Now.TimeOfDay.TotalSeconds).ToString();
-        int hits = 0;
+        
         public Settings Settings { get; set; }
 
         public int Hits { get; set; }
@@ -68,6 +68,12 @@ namespace XmlRefactor
         }
 
         abstract public string Run(string input);
+
+        virtual public string PostRun(string input)
+        {
+            return input;
+        }
+
         override sealed public string ToString()
         {
             return this.Grouping() + "." + this.RuleName();

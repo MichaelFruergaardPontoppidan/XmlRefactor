@@ -86,6 +86,7 @@ namespace XmlRefactor
                         continue;
                     rule.Hits = 0;
                     processedText = /*rule.formatXML*/(rule.Run(processedText));
+                    processedText = /*rule.formatXML*/(rule.PostRun(processedText));
                     hits += rule.Hits;
                 }
                 

@@ -9,14 +9,28 @@ namespace XmlRefactor
 {
     public class LLMCodeRefactorReplaceText
     {
-        private string textToReplace;
-        private string originalSourceCode;
+       // private string textToReplace;
         private string pattern = "flight";
+        private RefactorReplaceParameters parameters = null;
 
-        static private string Replace(string sourceCode, string textToReplace, string replacement)
+        static public string Replace(string sourceCode, RefactorReplaceParameters _parameters)
         {
             var refactor = new LLMCodeRefactorReplaceText();
-            refactor.originalSourceCode = sourceCode;
+            refactor.parameters = _parameters;
+
+            string sourceToRefactor = refactor.pruneSourceForLLM(sourceCode);
+            string updatedSource = refactor.rewriteSource(sourceToRefactor);
+
+            if (updatedSource != null)
+            {
+                return sourceCode.Replace(sourceToRefactor, updatedSource);
+            }
+            return null;
+        }
+
+        /*
+        static public string Replace(string sourceCode, string textToReplace, string replacement)
+        {
             refactor.textToReplace = textToReplace;
 
             string sourceToRefactor = refactor.pruneSourceForLLM(sourceCode);
@@ -29,17 +43,17 @@ namespace XmlRefactor
             return null;
         }
 
-
         static public string ReplaceWithTrue(string sourceCode, string textToReplace)
-        {
+        {            
             return Replace(sourceCode, textToReplace, "true");
         }
+        */
 
         private string rewriteSource(string sourceCode)
         {            
-            if (sourceCode.IndexOf(textToReplace, StringComparison.OrdinalIgnoreCase) > 0)
+            if (sourceCode.IndexOf(parameters.TextToReplace, StringComparison.OrdinalIgnoreCase) > 0)
             {
-                string sourceCodeToRefactor = Regex.Replace(sourceCode, textToReplace.Replace("(", "\\(").Replace(")", "\\)"), "true", RegexOptions.IgnoreCase);
+                string sourceCodeToRefactor = Regex.Replace(sourceCode, parameters.TextToReplace.Replace("(", "\\(").Replace(")", "\\)"), "true", RegexOptions.IgnoreCase);
 
                 string newCode = sourceCodeToRefactor;
                // if (newCode.Contains(" if"))
@@ -55,7 +69,7 @@ namespace XmlRefactor
                         if (a || b || true)) becomes if (a || b)
                         ", sourceCodeToRefactor);
                 }
-                //newCode = LLM.prompt("Remove unreachable code", newCode);
+                newCode = LLM.prompt("Remove unreachable code", newCode);
                 if (newCode.Count(c => c == '\n') < 10)
                 {
                     newCode = LLM.prompt("Remove unnessesary variables without reducing code readability. Follow clean code principles.", newCode);
@@ -125,23 +139,7 @@ namespace XmlRefactor
             m.AddWhiteSpaceNoLineBreaksRequired();
             m.AddLiteral("if");
             m.AddStartParenthesis();
-
-            switch (pattern)
-            {
-                case "flight":
-                    string flightToRemove = textToReplace.Substring(0, textToReplace.IndexOf(":"));
-
-                    m.AddLiteral(flightToRemove);
-                    m.AddDoubleColon();
-                    m.AddLiteral("instance");
-                    m.AddStartParenthesis();
-                    m.AddEndParenthesis();
-                    m.AddDot();
-                    m.AddLiteral("isEnabled");
-                    m.AddStartParenthesis();
-                    m.AddEndParenthesis();
-                    break;
-            }
+            m.addMatch(parameters.Match);
 
             Match match = m.Match(sourceCode);
             if (match.Success)
@@ -209,7 +207,12 @@ namespace XmlRefactor
             }
             return count;
         }
+    }
 
-
+    public class RefactorReplaceParameters
+    {
+        public string TextToReplace;
+        public string Replacement;
+        public XmlMatch Match;
     }
 }
