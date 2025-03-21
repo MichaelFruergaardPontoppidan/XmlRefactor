@@ -13,11 +13,16 @@ namespace XmlRefactor
 
         public Match Match(string input, int startAt = 0)
         {
+            return this.Regex().Match(input, startAt);
+        }
+
+        public Regex Regex()
+        {
             if (regex == null)
             {
                 regex = new Regex(this.Expression, RegexOptions.IgnoreCase | RegexOptions.Compiled);
             }
-            return regex.Match(input, startAt);
+            return regex;
         }
 
         private string Expression
@@ -119,7 +124,6 @@ namespace XmlRefactor
             builder.Append(@"[}]");
             return this;
         }
-
         public XmlMatch AddStartParenthesis()
         {
             this.AddWhiteSpace();
@@ -142,6 +146,18 @@ namespace XmlRefactor
         {
             this.AddWhiteSpace();
             builder.Append("[,]?");
+            return this;
+        }
+        public XmlMatch AddNotOptional()
+        {
+            this.AddWhiteSpace();
+            builder.Append("[!]?");
+            return this;
+        }
+        public XmlMatch AddNot()
+        {
+            this.AddWhiteSpace();
+            builder.Append("[!]");
             return this;
         }
         public XmlMatch AddNewLine()

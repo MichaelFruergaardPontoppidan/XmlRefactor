@@ -9,8 +9,6 @@ namespace XmlRefactor
 {
     public class LLMCodeRefactorReplaceText
     {
-       // private string textToReplace;
-        private string pattern = "flight";
         private RefactorReplaceParameters parameters = null;
 
         static public string Replace(string sourceCode, RefactorReplaceParameters _parameters)
@@ -28,38 +26,22 @@ namespace XmlRefactor
             return null;
         }
 
-        /*
-        static public string Replace(string sourceCode, string textToReplace, string replacement)
-        {
-            refactor.textToReplace = textToReplace;
-
-            string sourceToRefactor = refactor.pruneSourceForLLM(sourceCode);
-            string updatedSource = refactor.rewriteSource(sourceToRefactor);
-
-            if (updatedSource != null)
-            {
-                return sourceCode.Replace(sourceToRefactor, updatedSource);
-            }
-            return null;
-        }
-
-        static public string ReplaceWithTrue(string sourceCode, string textToReplace)
-        {            
-            return Replace(sourceCode, textToReplace, "true");
-        }
-        */
-
         private string rewriteSource(string sourceCode)
         {            
-            if (sourceCode.IndexOf(parameters.TextToReplace, StringComparison.OrdinalIgnoreCase) > 0)
-            {
-                string sourceCodeToRefactor = Regex.Replace(sourceCode, parameters.TextToReplace.Replace("(", "\\(").Replace(")", "\\)"), "true", RegexOptions.IgnoreCase);
+            Match match = parameters.Match.Match(sourceCode);
 
+            if (match.Success)
+                //    if (sourceCode.IndexOf(parameters.TextToReplace, StringComparison.OrdinalIgnoreCase) > 0)
+            {
+                //string sourceCodeToRefactor = Regex.Replace(sourceCode, parameters.Replace("(", "\\(").Replace(")", "\\)"), parameters.Replacement, RegexOptions.IgnoreCase);
+                string sourceCodeToRefactor = parameters.Match.Regex().Replace(sourceCode, parameters.Replacement);
+                
                 string newCode = sourceCodeToRefactor;
                // if (newCode.Contains(" if"))
                 {
                     newCode = LLM.prompt(@"
-                        If possible, simplify boolean logic in IF, WHERE and WHILE conditions. You can only change the condition block in statements, and remove unreachable code. 
+                        Rewrite the conditions to make them as simple as possible while preserving the logic, and remove unreachable code. 
+
                         Examples:
                         if (a && true) becomes if (a)
                         if (a && false) becomes if (false)
@@ -94,33 +76,32 @@ namespace XmlRefactor
                     "Do not change any other variants of variable declarations or usage", newCode);
                 */
 
-                newCode = newCode.Replace("\r", String.Empty); //Typically none
-                newCode = newCode.Replace("\n", Environment.NewLine);
-
-                if (this.CountLeadingSpaces(newCode) == 0)
+                if (newCode != String.Empty)
                 {
-                    // Fix indentation
-                    int indentation = this.CountLeadingSpaces(sourceCode);
+                    newCode = newCode.Replace("\r", String.Empty); //Typically none
+                    newCode = newCode.Replace("\n", Environment.NewLine);
 
-                    newCode = newCode.Replace(Environment.NewLine, Environment.NewLine + new string(' ', indentation));
-                    newCode = new string(' ', indentation) + newCode;
-                }
-                if (sourceCode.EndsWith(Environment.NewLine) && !newCode.EndsWith(Environment.NewLine))
-                {
-                    newCode += Environment.NewLine;
-                }
+                    if (this.CountLeadingSpaces(newCode) == 0)
+                    {
+                        // Fix indentation
+                        int indentation = this.CountLeadingSpaces(sourceCode);
 
+                        newCode = newCode.Replace(Environment.NewLine, Environment.NewLine + new string(' ', indentation));
+                        newCode = new string(' ', indentation) + newCode;
+                    }
+                    if (sourceCode.EndsWith(Environment.NewLine) && !newCode.EndsWith(Environment.NewLine))
+                    {
+                        newCode += Environment.NewLine;
+                    }
+                }
                 return newCode;
             }
             return null;
         }
 
-        private string pruneSourceForLLM(string originalSource)
-        {
-            string sourceCode = originalSource;
-            sourceCode = sourceCode.Replace("<![CDATA[" + Environment.NewLine, "");
-            sourceCode = sourceCode.Replace(Environment.NewLine + Environment.NewLine + "]]>", "");
 
+        private string removeFirstLinesStartingWith(string sourceCode, string potentialStart)
+        {
             do
             {
                 string firstLine = GetFirstLine(sourceCode);
@@ -134,11 +115,25 @@ namespace XmlRefactor
                 }
             } while (true);
 
+            return sourceCode;
+        }
+
+        private string pruneSourceForLLM(string originalSource)
+        {
+            string sourceCode = originalSource;
+            sourceCode = sourceCode.Replace("<![CDATA[" + Environment.NewLine, "");
+            sourceCode = sourceCode.Replace(Environment.NewLine + Environment.NewLine + "]]>", "");
+
+            sourceCode = removeFirstLinesStartingWith(sourceCode, "///");
+            sourceCode = removeFirstLinesStartingWith(sourceCode, "[");
+            sourceCode = removeFirstLinesStartingWith(sourceCode, "///");  // To support attributes before XML doc            
+
             XmlMatch m = new XmlMatch();
 
             m.AddWhiteSpaceNoLineBreaksRequired();
             m.AddLiteral("if");
             m.AddStartParenthesis();
+            m.AddNotOptional();
             m.addMatch(parameters.Match);
 
             Match match = m.Match(sourceCode);
@@ -155,7 +150,7 @@ namespace XmlRefactor
                     if (indentation >= startIndentation || line.Trim().Length == 0)
                     {
                         if (endBracket &&
-                            indentation == startIndentation &&
+                            indentation <= startIndentation &&
                             !line.Contains("else"))
                         {
                             // After the end bracket, break, unless an else block is coming.
@@ -211,7 +206,7 @@ namespace XmlRefactor
 
     public class RefactorReplaceParameters
     {
-        public string TextToReplace;
+        public string Tag; 
         public string Replacement;
         public XmlMatch Match;
     }

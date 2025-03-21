@@ -191,7 +191,7 @@ namespace XmlRefactor
                     referencesToDelete.Add(
                         new RefactorReplaceParameters()
                         {
-                            TextToReplace = methodName,
+                            Tag = methodName,
                             Replacement = returnValue,
                             Match = m2
                         });
@@ -224,7 +224,7 @@ namespace XmlRefactor
             foreach (var r in referencesToDelete)
             {
                 XmlMatch m = new XmlMatch();
-                m.AddLiteral(r.TextToReplace);
+                m.AddLiteral(r.Tag);
                 int startPos = 0;
 
                 do
@@ -287,7 +287,6 @@ namespace XmlRefactor
 
                         int sourcePos = _input.IndexOf(sourceCode);
                         
-                        string flightEnabledCall = flightToRemove + "::instance().isenabled()";
                         XmlMatch m2 = new XmlMatch();
 
                         m2.AddLiteral(flightToRemove)
@@ -302,7 +301,6 @@ namespace XmlRefactor
 
                         var flightRefactorParameters = new RefactorReplaceParameters()
                         {
-                            TextToReplace = flightEnabledCall,
                             Replacement = "true",
                             Match = m2
                         };
