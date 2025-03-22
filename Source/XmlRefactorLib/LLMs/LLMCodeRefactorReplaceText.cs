@@ -37,21 +37,34 @@ namespace XmlRefactor
                 string sourceCodeToRefactor = parameters.Match.Regex().Replace(sourceCode, parameters.Replacement);
                 
                 string newCode = sourceCodeToRefactor;
-               // if (newCode.Contains(" if"))
-                {
-                    newCode = LLM.prompt(@"
-                        Rewrite the conditions to make them as simple as possible while preserving the logic, and remove unreachable code. 
+                newCode = LLM.prompt(@"
+                    Rewrite the conditions to make them as simple as possible while preserving the logic, and remove unreachable code. 
 
-                        Examples:
-                        if (a && true) becomes if (a)
-                        if (a && false) becomes if (false)
-                        if (a || true) becomes if (true)
-                        if (a && !true) becomes if (false)
-                        while (a && !true) becomes while (false)
-                        if (a || b || true)) becomes if (a || b)
-                        ", sourceCodeToRefactor);
+                    Examples:
+                    if (!true) becomes if (false)
+                    if (a && true) becomes if (a)
+                    if (a && false) becomes if (false)
+                    if (a || true) becomes if (true)
+                    if (a || !true) becomes if (a)
+                    if (a && !true) becomes if (false)
+                    if (!a && true) becomes if (!a)
+                    if (!a && !b && true) becomes if (!a && !b)
+                    while (a && !true) becomes while (false)
+                    if (a || b || true)) becomes if (a || b)
+                    ", sourceCodeToRefactor);
+
+                if (newCode.Contains(" if") &&
+                    (newCode.Contains("true") || newCode.Contains("false")))
+                {
+                    newCode = LLM.prompt(@"Remove unreachable code while preserving the logic.
+
+                    Examples:
+                    if (false) { x; } can be removed
+                    if (!true) { x; } can be removed
+                    if (true) { x; } becomes x;
+                    if (!false) { x; } becomes x;
+                    ", newCode);
                 }
-                newCode = LLM.prompt("Remove unreachable code", newCode);
                 if (newCode.Count(c => c == '\n') < 10)
                 {
                     newCode = LLM.prompt("Remove unnessesary variables without reducing code readability. Follow clean code principles.", newCode);

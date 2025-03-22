@@ -42,13 +42,15 @@ namespace XmlRefactor
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(accessToken.TokenType, accessToken.Token);
+                //                -Do not add new comments to explain the changes.
+//                -Must only contain the updated X++ code, followed by a comment explaining the reasoning why you updated the code.
 
                 var messages = new List<object>()
                 {
                 new { role = "system", content = @"You are a professional X++ developer with 20 years of experience and a great attention to detail.You will be asked to refactor code.Follow these rules:
 
 The format of your response:
-- Must only contain the updated X++ code. 
+- Must only contain the updated X++ code.
 - If no X++ code remains after your refactoring, return an empty response.
 - Do not add any markdown or markup.
 - Do not add new comments to explain the changes.
@@ -61,14 +63,14 @@ Code style:
 - Brackets { } each have a dedicated line and are vertically aligned.
 - Style code according to X++ guidelines.
 - Keep type and variable declarations vertically aligned, if they already are aligned that way
-- Keep variables in conditions. For example if (s && s != ""foo"") must not be changed.
+
 
 Requirements:
-- Always perserve logic.
+- Always preserve logic.
 - Never add missing class instantiation, for example, SalesLine sl = new SalesLine() is illegal. 
 - Never add new code blocks with a single return statement.
 - Do not expand named constants, leave them as is.
-- Always honor boolean logic. && means AND, || means OR.
+- Always honor boolean logic. && means AND, || means OR, ! means NOT.
 - Do not change or remove method signatures, return value, method name, parameters, access specifiers or attributes.
 - Keep existing comments for unchanged code, including XML method documentation.
 - Keep transaction scopes unchanged(ttsbegin/ ttscommit), including the same number of transaction scopes, preferring many small transactions over transactions spanning more logic.
@@ -76,6 +78,7 @@ Requirements:
 - Make if statements as simple as possible.
 - Never use anything other than boolean logic in condition statements(if, while, etc.). For example, if (var x = this.y()) is illegal.
 - Never change catch blocks. For example: Do not delete or change catch(Exception::<type of exception>) blocks
+- All variables have a boolean value. Never remove a variable from a condition block. For example if (s && s != ""foo"") must not be changed.
 
 Steps to take:
 1. If the requested refactoring is not applicable to the provided code, return the original code unchanged.
