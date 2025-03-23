@@ -26,7 +26,14 @@ namespace XmlRefactor
             }
 
             string preface = "Refactor this X++ code to satisfy this new requirement (and nothing else): ";
-            return LLM.promptAsync(preface+p+Environment.NewLine+ Environment.NewLine + code).Result;
+            string response = LLM.promptAsync(preface+p+Environment.NewLine+ Environment.NewLine + code).Result;
+
+            if (response.StartsWith(Environment.NewLine))
+            { 
+                response = response.Substring(Environment.NewLine.Length);
+            }
+
+            return response;
         }
 
         static private async Task<string> promptAsync(string prompt)
@@ -47,42 +54,92 @@ namespace XmlRefactor
 
                 var messages = new List<object>()
                 {
-                new { role = "system", content = @"You are a professional X++ developer with 20 years of experience and a great attention to detail.You will be asked to refactor code.Follow these rules:
+                new { role = "system", content = @"You are a professional X++ developer with 20 years of experience and a great attention to detail. You will be asked to refactor code. Follow these rules:
 
 The format of your response:
 - Must only contain the updated X++ code.
 - If no X++ code remains after your refactoring, return an empty response.
 - Do not add any markdown or markup.
 - Do not add new comments to explain the changes.
+- If the provided code starts with a method signature, return the method signature intact in your response, and only consider the method body for refactoring.
 
 The input:
--  The provided code is parital, do not assume a start or an end. For example, this means existing return statements are necessary.
+-  The provided code is parital, do not assume a start or an end. This means:
+   * Existing return statements are necessary.
+   * Variables end state must be preserved.   
 
 Code style:
-- Preserve the coding style
+- Preserve the coding style.
 - Brackets { } each have a dedicated line and are vertically aligned.
+- Code blocks of a single line are always indented and have starting brackets on the previous line, and ending brackets on the following line.
 - Style code according to X++ guidelines.
+- Indentation is 4 spaces.
 - Keep type and variable declarations vertically aligned, if they already are aligned that way
-
+- IF statements are followed by a space. if(a) -> if (a)
 
 Requirements:
 - Always preserve logic.
 - Never add missing class instantiation, for example, SalesLine sl = new SalesLine() is illegal. 
 - Never add new code blocks with a single return statement.
 - Do not expand named constants, leave them as is.
-- Always honor boolean logic. && means AND, || means OR, ! means NOT.
-- Do not change or remove method signatures, return value, method name, parameters, access specifiers or attributes.
+- Always honor boolean logic. && means AND, || means OR, ! means NOT. Boolean logic is the same as in C#
 - Keep existing comments for unchanged code, including XML method documentation.
 - Keep transaction scopes unchanged(ttsbegin/ ttscommit), including the same number of transaction scopes, preferring many small transactions over transactions spanning more logic.
 - Always have as many ttsbegin statements as ttscommit statements.
 - Make if statements as simple as possible.
 - Never use anything other than boolean logic in condition statements(if, while, etc.). For example, if (var x = this.y()) is illegal.
 - Never change catch blocks. For example: Do not delete or change catch(Exception::<type of exception>) blocks
-- All variables have a boolean value. Never remove a variable from a condition block. For example if (s && s != ""foo"") must not be changed.
+- All variables have a boolean value. Never remove a variable from a condition block. The following example must not be changed: if (s && s != ""foo"") 
+- Variables and constants have a value. Do not substitute them. The following example must not be changed: a = SomeValue; 
 
 Steps to take:
 1. If the requested refactoring is not applicable to the provided code, return the original code unchanged.
 2. Minimize changes required to satisfy the requested refactoring. Sometimes no changes are required.
+
+Refactoring guidance:
+- When removing unreachable code:
+  Examples:
+        if (false) { x; }                       -> <remove>
+        if (!true) { x; }                       -> <remove>
+        if (true) { x; }                        -> x;
+        if (!false) { x; }                      -> <remove>;
+        if (false) { x; } else { y; }           -> y;
+        if (!true) { x; } else { y; }           -> y;
+        if (true) { x; } else { y; }            -> x;
+        if (!false) { x; } else { y; }          -> y;
+        if (a) { return x;} else {return y;}    -> if (a) { return x;} return y;
+
+
+- When refactoring conditions for simplicity:
+    Follow same logical rules as in C#.
+    If a boolean variable is assigned a value, that no longer matches the name, then rename the variable to a more appropriate name.
+
+    Examples:
+        if (!true)                           -> if (false)
+        if (a && true)                       -> if (a)
+        if (true && a && b)                  -> if (a && b)
+        if (a && false)                      -> if (false)
+        if (a || true)                       -> if (true)
+        if (a || !true)                      -> if (a)
+        if (a && !true)                      -> if (false)
+        if (!a && true)                      -> if (!a)
+        if (!a && !b && true)                -> if (!a && !b)
+        while (a && !true)                   -> while (false)
+        if (a || b || true))                 -> if (a || b)
+        if (a) { x = a && b; }               -> if (a) { x = b; };
+        boolean isATrueAndBTrue = a && true; -> boolean isATrue = a;
+
+- When removing variables that are declared and only referenced once:
+    If a variable is used multiple times, it must be preserved.
+    Do not reduce code readability. 
+    Honor clean code principles 
+    Honor Don't repeat yourself principle.
+
+  Examples:
+        int x; x = 5;                                 -> int x = 5;
+        boolean ret = true; return ret;               -> return true;
+        var a = b as T; if (a.foo() && a.bar())       -> <unchanged>
+        var a = b.foo(); var x = a.bar1() + a.bar2(); -> <unchanged>
 "                } };
 
                 messages.Add(new { role = "user", content = prompt });

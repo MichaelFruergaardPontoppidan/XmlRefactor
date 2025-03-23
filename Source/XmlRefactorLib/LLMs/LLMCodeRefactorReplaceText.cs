@@ -37,39 +37,18 @@ namespace XmlRefactor
                 string sourceCodeToRefactor = parameters.Match.Regex().Replace(sourceCode, parameters.Replacement);
                 
                 string newCode = sourceCodeToRefactor;
-                newCode = LLM.prompt(@"
-                    Rewrite the conditions to make them as simple as possible while preserving the logic, and remove unreachable code. 
-
-                    Examples:
-                    if (!true) becomes if (false)
-                    if (a && true) becomes if (a)
-                    if (a && false) becomes if (false)
-                    if (a || true) becomes if (true)
-                    if (a || !true) becomes if (a)
-                    if (a && !true) becomes if (false)
-                    if (!a && true) becomes if (!a)
-                    if (!a && !b && true) becomes if (!a && !b)
-                    while (a && !true) becomes while (false)
-                    if (a || b || true)) becomes if (a || b)
-                    ", sourceCodeToRefactor);
+                newCode = LLM.prompt(@"Rewrite the conditions to make them as simple as possible while preserving the logic, and remove unreachable code. ", sourceCodeToRefactor);
 
                 if (newCode.Contains(" if") &&
                     (newCode.Contains("true") || newCode.Contains("false")))
                 {
-                    newCode = LLM.prompt(@"Remove unreachable code while preserving the logic.
-
-                    Examples:
-                    if (false) { x; } can be removed
-                    if (!true) { x; } can be removed
-                    if (true) { x; } becomes x;
-                    if (!false) { x; } becomes x;
-                    ", newCode);
-                }
-                if (newCode.Count(c => c == '\n') < 10)
-                {
-                    newCode = LLM.prompt("Remove unnessesary variables without reducing code readability. Follow clean code principles.", newCode);
+                    newCode = LLM.prompt(@"Remove unreachable code while preserving the logic.", newCode);
                 }
                 /*
+                if (newCode.Count(c => c == '\n') < 10)
+                {
+                    newCode = LLM.prompt("Remove variables that are declared and only referenced once while preserving the simplicity of the logic. ", newCode);
+                }
                 {
                     string newCode2 = LLM.prompt("Without introducing new return statements, simplify conditional logic keeping all semantics intact; if not possible, return the code unchanged.", newCode);
 
@@ -118,7 +97,7 @@ namespace XmlRefactor
             do
             {
                 string firstLine = GetFirstLine(sourceCode);
-                if (firstLine.Trim().StartsWith("///"))
+                if (firstLine.Trim().StartsWith(potentialStart))
                 {
                     sourceCode = sourceCode.Remove(0, firstLine.Length + 1);
                 }
