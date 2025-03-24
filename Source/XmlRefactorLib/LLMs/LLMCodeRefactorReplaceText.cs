@@ -85,9 +85,9 @@ namespace XmlRefactor
                                     FullMethodOnly = true
                                 });
                         }
-                        match = m.Match(sourceCode, match.Index + match.Length);
                         break;
                 }
+                match = m.Match(sourceCode, match.Index + match.Length);
             }
             return (null, null);
         }
@@ -160,7 +160,7 @@ namespace XmlRefactor
                 }
                 return newCode;
             }
-            return null;
+            return sourceCode;
         }
 
 
