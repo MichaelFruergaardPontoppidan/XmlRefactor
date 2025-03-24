@@ -26,64 +26,136 @@ namespace XmlRefactor
             return null;
         }
 
+        private static bool isVariableAssignedTo(string sourceCode, string variableName)
+        {
+            // b = 
+
+            XmlMatch m = new XmlMatch();
+            m.AddCommaOptional()
+               .AddWhiteSpace()
+               .AddLiteral(variableName)
+               .AddEqual();
+
+            Match match = m.Match(sourceCode);
+            return match.Success;
+        }
+
+        public static (Match, RefactorReplaceParameters) CanRefactorBoolAssignment(string sourceCode, string fullSource, Boolean mustBePrivate = false)
+        {
+            // boolean b = true;
+
+            XmlMatch m = new XmlMatch();
+            if (mustBePrivate)
+            {                
+                m.AddWhiteSpace().AddLiteral("private");
+                m.AddWhiteSpace().AddLiteralOptional("static");
+            }
+
+            m.AddWhiteSpace()
+               .AddLiteral("boolean")
+               .AddCapture()  // Variable name
+               .AddEqual()
+               .AddWhiteSpace()
+               .AddCaptureWord() //("true", "false")
+               .AddWhiteSpace()
+               .AddSemicolon();
+            
+            Match match = m.Match(sourceCode);
+            while (match.Success)
+            {
+                string variableName = match.Groups[1 + (mustBePrivate?1:0)].Value;
+                string assignment = match.Groups[2 + (mustBePrivate ? 1 : 0)].Value.ToLower();
+
+                switch (assignment)
+                {
+                    case "true":
+                    case "false":
+                        if (!isVariableAssignedTo(sourceCode.Remove(match.Index, match.Length), variableName) &&
+                            !isVariableAssignedTo(fullSource.Replace(sourceCode, ""), variableName))
+                        {
+                            XmlMatch m2 = new XmlMatch();
+                            m2.AddLiteral(variableName);
+
+                            return (match,
+                                new RefactorReplaceParameters()
+                                {
+                                    Replacement = assignment,
+                                    Match = m2,
+                                    Tag = variableName,
+                                    FullMethodOnly = true
+                                });
+                        }
+                        match = m.Match(sourceCode, match.Index + match.Length);
+                        break;
+                }
+            }
+            return (null, null);
+        }
+
+        private bool hasUnconditionalIfStatement(string sourceCode)
+        {
+            // if (true)
+            // if (false)
+
+            XmlMatch m = new XmlMatch();
+            m.AddCommaOptional()
+               .AddWhiteSpace()
+               .AddLiteral("if")
+               .AddStartParenthesis()
+               .AddOneOfLiterals("true", "false")
+               .AddEndParenthesis();
+
+            Match match = m.Match(sourceCode);
+            return match.Success;
+        }
+
         private string rewriteSource(string sourceCode)
         {            
             Match match = parameters.Match.Match(sourceCode);
 
             if (match.Success)
-                //    if (sourceCode.IndexOf(parameters.TextToReplace, StringComparison.OrdinalIgnoreCase) > 0)
             {
-                //string sourceCodeToRefactor = Regex.Replace(sourceCode, parameters.Replace("(", "\\(").Replace(")", "\\)"), parameters.Replacement, RegexOptions.IgnoreCase);
                 string sourceCodeToRefactor = parameters.Match.Regex().Replace(sourceCode, parameters.Replacement);
                 
                 string newCode = sourceCodeToRefactor;
                 newCode = LLM.prompt(@"Rewrite the conditions to make them as simple as possible while preserving the logic, and remove unreachable code. ", sourceCodeToRefactor);
 
-                if (newCode.Contains(" if") &&
-                    (newCode.Contains("true") || newCode.Contains("false")))
+                if (hasUnconditionalIfStatement(newCode))
                 {
-                    newCode = LLM.prompt(@"Remove unreachable code while preserving the logic.", newCode);
+                    newCode = LLM.prompt(@"Remove unreachable code while preserving all logic.", newCode);
                 }
-                /*
-                if (newCode.Count(c => c == '\n') < 10)
-                {
-                    newCode = LLM.prompt("Remove variables that are declared and only referenced once while preserving the simplicity of the logic. ", newCode);
-                }
-                {
-                    string newCode2 = LLM.prompt("Without introducing new return statements, simplify conditional logic keeping all semantics intact; if not possible, return the code unchanged.", newCode);
 
-                    if (hasSameCountOf("return", newCode, newCode2) &&
-                        hasSameCountOf("ttsbegin", newCode, newCode2))
+                if (!parameters.KeepBooleanConsts)
+                {
+                    Match m2 = null;
+                    RefactorReplaceParameters parameters2 = null;
+                    (m2, parameters2) = CanRefactorBoolAssignment(newCode, newCode);
+                    if (m2 != null)
                     {
-                        // LLM followed instructions, accept reply
-                        newCode = newCode2;
+                        newCode = newCode.Remove(m2.Index, m2.Length);
+                        newCode = LLMCodeRefactorReplaceText.Replace(newCode, parameters2);
                     }
                 }
-                newCode = LLM.prompt(@"If any lines contain just a variable declaration then move the type declaration to the first line where the variable is assigned." +
-                    "For example: " +
-                    "int myInt;" +
-                    "myInt = 5;" +
-                    "becomes" +
-                    "int myInt = 5;" +
-                    "Do not change any other variants of variable declarations or usage", newCode);
-                */
 
-                if (newCode != String.Empty)
+                if (newCode != null)
                 {
-                    newCode = newCode.Replace("\r", String.Empty); //Typically none
-                    newCode = newCode.Replace("\n", Environment.NewLine);
-
-                    if (this.CountLeadingSpaces(newCode) == 0)
+                    if (newCode != String.Empty)
                     {
-                        // Fix indentation
-                        int indentation = this.CountLeadingSpaces(sourceCode);
+                        newCode = newCode.Replace("\r", String.Empty); //Typically none
+                        newCode = newCode.Replace("\n", Environment.NewLine);
 
-                        newCode = newCode.Replace(Environment.NewLine, Environment.NewLine + new string(' ', indentation));
-                        newCode = new string(' ', indentation) + newCode;
-                    }
-                    if (sourceCode.EndsWith(Environment.NewLine) && !newCode.EndsWith(Environment.NewLine))
-                    {
-                        newCode += Environment.NewLine;
+                        if (this.CountLeadingSpaces(newCode) == 0)
+                        {
+                            // Fix indentation
+                            int indentation = this.CountLeadingSpaces(sourceCode);
+
+                            newCode = newCode.Replace(Environment.NewLine, Environment.NewLine + new string(' ', indentation));
+                            newCode = new string(' ', indentation) + newCode;
+                        }
+                        if (sourceCode.EndsWith(Environment.NewLine) && !newCode.EndsWith(Environment.NewLine))
+                        {
+                            newCode += Environment.NewLine;
+                        }
                     }
                 }
                 return newCode;
@@ -97,7 +169,8 @@ namespace XmlRefactor
             do
             {
                 string firstLine = GetFirstLine(sourceCode);
-                if (firstLine.Trim().StartsWith(potentialStart))
+                if (firstLine.Trim().StartsWith(potentialStart) ||
+                    firstLine.Trim().Length == 0)
                 {
                     sourceCode = sourceCode.Remove(0, firstLine.Length + 1);
                 }
@@ -114,49 +187,53 @@ namespace XmlRefactor
         {
             string sourceCode = originalSource;
             sourceCode = sourceCode.Replace("<![CDATA[" + Environment.NewLine, "");
-            sourceCode = sourceCode.Replace(Environment.NewLine + Environment.NewLine + "]]>", "");
+            sourceCode = sourceCode.Replace(Environment.NewLine + "]]>", "");
 
+            sourceCode = removeFirstLinesStartingWith(sourceCode, "using");
             sourceCode = removeFirstLinesStartingWith(sourceCode, "///");
             sourceCode = removeFirstLinesStartingWith(sourceCode, "[");
             sourceCode = removeFirstLinesStartingWith(sourceCode, "///");  // To support attributes before XML doc            
 
-            XmlMatch m = new XmlMatch();
-
-            m.AddWhiteSpaceNoLineBreaksRequired();
-            m.AddLiteral("if");
-            m.AddStartParenthesis();
-            m.AddNotOptional();
-            m.addMatch(parameters.Match);
-
-            Match match = m.Match(sourceCode);
-            if (match.Success)
+            if (!parameters.FullMethodOnly)
             {
-                sourceCode = sourceCode.Remove(0, match.Index);
-                int startIndentation = this.CountLeadingSpaces(sourceCode);
-                var lines = sourceCode.Replace("\r", "").Split('\n');
-                string newSource = string.Empty;
-                bool endBracket = false;
-                foreach (string line in lines)
+                XmlMatch m = new XmlMatch();
+                m.AddNewLine();
+                m.AddWhiteSpaceNoLineBreaksRequired();
+                m.AddLiteral("if");
+                m.AddStartParenthesis();
+                m.AddNotOptional();
+                m.addMatch(parameters.Match);
+
+                Match match = m.Match(sourceCode);
+                if (match.Success)
                 {
-                    int indentation = this.CountLeadingSpaces(line);
-                    if (indentation >= startIndentation || line.Trim().Length == 0)
+                    sourceCode = sourceCode.Remove(0, match.Index);
+                    int startIndentation = this.CountLeadingSpaces(sourceCode);
+                    var lines = sourceCode.Replace("\r", "").Split('\n');
+                    string newSource = string.Empty;
+                    bool endBracket = false;
+                    foreach (string line in lines)
                     {
-                        if (endBracket &&
-                            indentation <= startIndentation &&
-                            !line.Contains("else"))
+                        int indentation = this.CountLeadingSpaces(line);
+                        if (indentation >= startIndentation || line.Trim().Length == 0)
                         {
-                            // After the end bracket, break, unless an else block is coming.
+                            if (endBracket &&
+                                indentation <= startIndentation &&
+                                !line.Contains("else"))
+                            {
+                                // After the end bracket, break, unless an else block is coming.
+                                break;
+                            }
+                            newSource += line + '\n';
+                            endBracket = ((line.Trim() == "}" && indentation == startIndentation));
+                        }
+                        else
+                        {
                             break;
                         }
-                        newSource += line + '\n';
-                        endBracket = ((line.Trim() == "}" && indentation == startIndentation));
                     }
-                    else
-                    {
-                        break;
-                    }
+                    sourceCode = newSource.Replace("\n", "\r\n");
                 }
-                sourceCode = newSource.Replace("\n", "\r\n");
             }
             if (!originalSource.Contains(sourceCode))
             {
@@ -201,5 +278,7 @@ namespace XmlRefactor
         public string Tag; 
         public string Replacement;
         public XmlMatch Match;
+        public Boolean FullMethodOnly = false;
+        public Boolean KeepBooleanConsts = false;
     }
 }

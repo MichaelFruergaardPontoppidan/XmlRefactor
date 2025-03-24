@@ -40,7 +40,7 @@ namespace XmlRefactor
         }
         public XmlMatch AddDelimter()
         {
-            builder.Append(@"[\,\(\[\s]+");
+            builder.Append(@"[\:\,\(\[\s]+");
             return this;
         }
         public XmlMatch AddWhiteSpaceNoLineBreaksRequired()
@@ -65,6 +65,13 @@ namespace XmlRefactor
             builder.Append(literal);
             return this;
         }
+
+        public XmlMatch AddLiteralOptional(string literal)
+        {
+            builder.Append($"({literal})?");
+            return this;
+        }
+
         public XmlMatch AddOneOfLiterals(string literal1, string literal2)
         {
             builder.Append($"({literal1}|{literal2})");
@@ -187,6 +194,7 @@ namespace XmlRefactor
         }
         public XmlMatch AddEqual()
         {
+            this.AddWhiteSpace();
             builder.Append("[=]");
             return this;
         }

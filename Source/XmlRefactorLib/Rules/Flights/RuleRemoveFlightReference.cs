@@ -44,6 +44,7 @@ namespace XmlRefactor
         protected override void buildXpoMatch()
         {         
             xpoMatch.AddLiteral(flightToRemove);
+            xpoMatch.AddDelimter();
         }
 
         public override string Run(string _input)
@@ -210,11 +211,7 @@ namespace XmlRefactor
 
         private string PostRunForMethod(string sourceCode, RefactorReplaceParameters referenceToDelete)
         {
-
             string updatedSource = LLMCodeRefactorReplaceText.Replace(sourceCode, referenceToDelete);
-
-
-
             return updatedSource;
         }
 
@@ -286,7 +283,7 @@ namespace XmlRefactor
                         string sourceCode = MetaData.extractPreviousXMLElement(containingXMLElement, match.Index, _input);
 
                         int sourcePos = _input.IndexOf(sourceCode);
-                        
+                        Boolean scopedToMethod = containingXMLElement == "Source";
                         XmlMatch m2 = new XmlMatch();
 
                         m2.AddLiteral(flightToRemove)
@@ -302,6 +299,7 @@ namespace XmlRefactor
                         var flightRefactorParameters = new RefactorReplaceParameters()
                         {
                             Replacement = "true",
+                            KeepBooleanConsts = !scopedToMethod,
                             Match = m2
                         };
 
@@ -317,6 +315,19 @@ namespace XmlRefactor
                             if (canBeDeleted)
                             {
                                 updatedSource = String.Empty;
+                            }
+
+                            if (!scopedToMethod)
+                            {
+                                Match m3 = null;
+                                RefactorReplaceParameters parameters3 = null;
+                                (m3, parameters3) = LLMCodeRefactorReplaceText.CanRefactorBoolAssignment(updatedSource, _input.Replace(sourceCode, updatedSource), true);
+                                if (m3 != null)
+                                {
+                                    updatedSource = updatedSource.Remove(m3.Index, m3.Length);
+                                    parameters3.KeepBooleanConsts = true;                                    
+                                    referencesToDelete.Add(parameters3);                                    
+                                }
                             }
                         }
                         else

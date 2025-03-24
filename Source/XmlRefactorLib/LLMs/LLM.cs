@@ -83,7 +83,7 @@ Requirements:
 - Never add new code blocks with a single return statement.
 - Do not expand named constants, leave them as is.
 - Always honor boolean logic. && means AND, || means OR, ! means NOT. Boolean logic is the same as in C#
-- Keep existing comments for unchanged code, including XML method documentation.
+- Preserve all existing comments
 - Keep transaction scopes unchanged(ttsbegin/ ttscommit), including the same number of transaction scopes, preferring many small transactions over transactions spanning more logic.
 - Always have as many ttsbegin statements as ttscommit statements.
 - Make if statements as simple as possible.
@@ -91,6 +91,9 @@ Requirements:
 - Never change catch blocks. For example: Do not delete or change catch(Exception::<type of exception>) blocks
 - All variables have a boolean value. Never remove a variable from a condition block. The following example must not be changed: if (s && s != ""foo"") 
 - Variables and constants have a value. Do not substitute them. The following example must not be changed: a = SomeValue; 
+- '' and "" are empty strings, and are a valid values. Do not remove them when refactoring.
+- Do not change existing indentation
+- Keep all variable guards, for example if (!x) { return; }
 
 Steps to take:
 1. If the requested refactoring is not applicable to the provided code, return the original code unchanged.
@@ -99,20 +102,26 @@ Steps to take:
 Refactoring guidance:
 - When removing unreachable code:
   Examples:
-        if (false) { x; }                       -> <remove>
-        if (!true) { x; }                       -> <remove>
-        if (true) { x; }                        -> x;
-        if (!false) { x; }                      -> <remove>;
-        if (false) { x; } else { y; }           -> y;
-        if (!true) { x; } else { y; }           -> y;
-        if (true) { x; } else { y; }            -> x;
-        if (!false) { x; } else { y; }          -> y;
-        if (a) { return x;} else {return y;}    -> if (a) { return x;} return y;
-
+        if (false) { x; }                                       -> <remove>
+        if (!true) { x; }                                       -> <remove>
+        if (true) { x; }                                        -> x;
+        if (!false) { x; }                                      -> <remove>;
+        if (false) { x; } else { y; }                           -> y;
+        if (!true) { x; } else { y; }                           -> y;
+        if (true) { x; } else { y; }                            -> x;
+        if (!false) { x; } else { y; }                          -> y;
+        true ? a : b                                            -> a;
+        !true ? a : b                                           -> b;
+        false ? a : b                                           -> b;
+        !false ? a : b                                          -> a;
+        if (a) { return x; } else { return y; }                 -> if (a) { return x;} return y;
+        if (a) { if (b) { return x; } } else { return y; }      -> <Unchanged>
+        if (true) { foo(); return x; } return y;                -> foo(); return x;
 
 - When refactoring conditions for simplicity:
     Follow same logical rules as in C#.
     If a boolean variable is assigned a value, that no longer matches the name, then rename the variable to a more appropriate name.
+    Keep parathesis for clarity
 
     Examples:
         if (!true)                           -> if (false)
@@ -124,6 +133,8 @@ Refactoring guidance:
         if (a && !true)                      -> if (false)
         if (!a && true)                      -> if (!a)
         if (!a && !b && true)                -> if (!a && !b)
+        if ((a || b) && c)                   -> <Unchanged>
+        if (((a || b) && c) || d)            -> <Unchanged>
         while (a && !true)                   -> while (false)
         if (a || b || true))                 -> if (a || b)
         if (a) { x = a && b; }               -> if (a) { x = b; };

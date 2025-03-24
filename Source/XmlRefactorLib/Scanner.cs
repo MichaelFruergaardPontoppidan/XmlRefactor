@@ -24,7 +24,7 @@ namespace XmlRefactor
             
             if (Directory.Exists(path))
             {
-                files = System.IO.Directory.GetFiles(path, "SalesTable.xml");
+                files = System.IO.Directory.GetFiles(path, "*.xml");
                 
                 foreach (string file in files)
                 {
