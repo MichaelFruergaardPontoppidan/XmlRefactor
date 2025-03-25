@@ -168,10 +168,8 @@ namespace XmlRefactor
             return this;
         }
         public XmlMatch AddNewLine()
-        {
-            this.AddWhiteSpace();
-            builder.Append("[#]");
-            this.AddWhiteSpace();
+        {            
+            builder.Append("\r?\n");            
             return this;
         }
         public XmlMatch AddSemicolon()

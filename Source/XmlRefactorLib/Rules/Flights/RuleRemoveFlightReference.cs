@@ -63,13 +63,15 @@ namespace XmlRefactor
         }
 
         private string getFlightToRemove()
-        { 
+        {
+            if (this.InputParameter != string.Empty)
+                return this.InputParameter;
+
             if (Settings.RuleParameter != String.Empty)
                 return Settings.RuleParameter;
 
             return "WHSUseReturnDetailConfigurationProviderFlight"; 
         }
-
 
         private string rewriteSource(string sourceCode)
         {         
@@ -281,9 +283,10 @@ namespace XmlRefactor
                     case "Source":
                     case "Declaration":
                         string sourceCode = MetaData.extractPreviousXMLElement(containingXMLElement, match.Index, _input);
+                        string methodName = MetaData.extractPreviousXMLElement("Name", match.Index, _input);
 
                         int sourcePos = _input.IndexOf(sourceCode);
-                        Boolean scopedToMethod = containingXMLElement == "Source";
+                        Boolean scopedToMethod = containingXMLElement == "Source" && methodName.ToLower() != "classdeclaration";
                         XmlMatch m2 = new XmlMatch();
 
                         m2.AddLiteral(flightToRemove)
@@ -308,7 +311,8 @@ namespace XmlRefactor
                         bool canBeDeleted = false;
                         string replacement = string.Empty;
 
-                        if (updatedSource != null)
+                        if (updatedSource != null &&
+                            updatedSource != sourceCode)
                         {
                             canBeDeleted = this.canMethodBeDeleted(updatedSource);
 
@@ -337,7 +341,7 @@ namespace XmlRefactor
 
                         if (updatedSource != null)
                         {
-                            string methodName = MetaData.extractPreviousXMLElement("Name", match.Index, _input);
+                           
                             if (updatedSource == String.Empty)
                             {
                                 updatedInput = this.deleteMethod(methodName, _input);

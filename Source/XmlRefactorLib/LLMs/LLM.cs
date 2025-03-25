@@ -49,8 +49,6 @@ namespace XmlRefactor
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(accessToken.TokenType, accessToken.Token);
-                //                -Do not add new comments to explain the changes.
-//                -Must only contain the updated X++ code, followed by a comment explaining the reasoning why you updated the code.
 
                 var messages = new List<object>()
                 {
@@ -58,7 +56,7 @@ namespace XmlRefactor
 
 The format of your response:
 - Must only contain the updated X++ code.
-- If no X++ code remains after your refactoring, return an empty response.
+- If no X++ code remains after your refactoring, return an empty string.
 - Do not add any markdown or markup.
 - Do not add new comments to explain the changes.
 - If the provided code starts with a method signature, return the method signature intact in your response, and only consider the method body for refactoring.
@@ -79,11 +77,14 @@ Code style:
 
 Requirements:
 - Always preserve logic.
+- Always preserve comments - including
+   - Single line // comment
+   - Multi Line: /* comment */
+   - XML Documentation /// xml doc
 - Never add missing class instantiation, for example, SalesLine sl = new SalesLine() is illegal. 
 - Never add new code blocks with a single return statement.
 - Do not expand named constants, leave them as is.
 - Always honor boolean logic. && means AND, || means OR, ! means NOT. Boolean logic is the same as in C#
-- Preserve all existing comments
 - Keep transaction scopes unchanged(ttsbegin/ ttscommit), including the same number of transaction scopes, preferring many small transactions over transactions spanning more logic.
 - Always have as many ttsbegin statements as ttscommit statements.
 - Make if statements as simple as possible.
@@ -117,11 +118,16 @@ Refactoring guidance:
         if (a) { return x; } else { return y; }                 -> if (a) { return x;} return y;
         if (a) { if (b) { return x; } } else { return y; }      -> <Unchanged>
         if (true) { foo(); return x; } return y;                -> foo(); return x;
+        using (var x = true ? a : b)                            -> using (var x = a)
+        using (var x = !true ? a : b)                           -> using (var x = b)
+        using (var x = false ? a : b)                           -> using (var x = b)
+        using (var x = !false ? a : b)                          -> using (var x = a)
 
 - When refactoring conditions for simplicity:
-    Follow same logical rules as in C#.
+    Follow same logical rules as in C#, but keep parenthesis.
     If a boolean variable is assigned a value, that no longer matches the name, then rename the variable to a more appropriate name.
-    Keep parathesis for clarity
+    Keep parenthesis for clarity, for example in (((a || b) && c) || d)  
+    Do not add new usage of ternary conditional operator ( b ? x : y).
 
     Examples:
         if (!true)                           -> if (false)
@@ -134,11 +140,16 @@ Refactoring guidance:
         if (!a && true)                      -> if (!a)
         if (!a && !b && true)                -> if (!a && !b)
         if ((a || b) && c)                   -> <Unchanged>
-        if (((a || b) && c) || d)            -> <Unchanged>
+        if (((a || b) && c) || d)            -> <Unchanged>        
+        if (((a || b) && true) || c)         -> if (a || b || c)
         while (a && !true)                   -> while (false)
         if (a || b || true))                 -> if (a || b)
         if (a) { x = a && b; }               -> if (a) { x = b; };
         boolean isATrueAndBTrue = a && true; -> boolean isATrue = a;
+
+
+
+
 
 - When removing variables that are declared and only referenced once:
     If a variable is used multiple times, it must be preserved.
@@ -158,7 +169,8 @@ Refactoring guidance:
                 var request = new
                 {
                     messages,
-                    temperature = 0.0
+                    temperature = 0.0,
+                    max_completion_tokens = 14096                    
                 };
 
                 var requestContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
@@ -173,7 +185,9 @@ Refactoring guidance:
 
                 messages.Add(responseData["choices"][0]["message"]);
                 var responseText = responseData["choices"][0]["message"]["content"];
-                return responseText.ToString();
+                string result = responseText.ToString();
+                result = result.Replace("```", "");
+                return result;
             }
         }
     }

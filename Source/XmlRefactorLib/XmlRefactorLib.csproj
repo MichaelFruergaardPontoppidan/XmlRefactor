@@ -188,6 +188,7 @@
     <Compile Include="Rules\Tests\RuleFlightToFeatureDependency.cs" />
     <Compile Include="Rules\Tests\RuleRenameScenarioTests.cs" />
     <Compile Include="Scanner.cs" />
+    <Compile Include="ScannerCache.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="XmlHandling\XmlMatch.cs" />
     <Compile Include="XmlHandling\XmlReaders.cs" />

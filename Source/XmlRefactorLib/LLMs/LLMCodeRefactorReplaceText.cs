@@ -49,6 +49,7 @@ namespace XmlRefactor
             {                
                 m.AddWhiteSpace().AddLiteral("private");
                 m.AddWhiteSpace().AddLiteralOptional("static");
+                m.AddWhiteSpace().AddLiteralOptional("readonly");
             }
 
             m.AddWhiteSpace()
@@ -63,8 +64,8 @@ namespace XmlRefactor
             Match match = m.Match(sourceCode);
             while (match.Success)
             {
-                string variableName = match.Groups[1 + (mustBePrivate?1:0)].Value;
-                string assignment = match.Groups[2 + (mustBePrivate ? 1 : 0)].Value.ToLower();
+                string variableName = match.Groups[1 + (mustBePrivate? 2 : 0)].Value;
+                string assignment = match.Groups[2 + (mustBePrivate ? 2 : 0)].Value.ToLower();
 
                 switch (assignment)
                 {
@@ -197,42 +198,53 @@ namespace XmlRefactor
             if (!parameters.FullMethodOnly)
             {
                 XmlMatch m = new XmlMatch();
+                /*
                 m.AddNewLine();
                 m.AddWhiteSpaceNoLineBreaksRequired();
                 m.AddLiteral("if");
                 m.AddStartParenthesis();
                 m.AddNotOptional();
                 m.addMatch(parameters.Match);
+                */
+                m.addMatch(parameters.Match);
 
                 Match match = m.Match(sourceCode);
                 if (match.Success)
                 {
-                    sourceCode = sourceCode.Remove(0, match.Index);
-                    int startIndentation = this.CountLeadingSpaces(sourceCode);
-                    var lines = sourceCode.Replace("\r", "").Split('\n');
-                    string newSource = string.Empty;
-                    bool endBracket = false;
-                    foreach (string line in lines)
+                    int ifPos = sourceCode.LastIndexOf(" if", match.Index);
+                    if (ifPos > 0 && match.Index - ifPos < 500) // Not too far apart
                     {
-                        int indentation = this.CountLeadingSpaces(line);
-                        if (indentation >= startIndentation || line.Trim().Length == 0)
+                        int newLinePos = sourceCode.LastIndexOf(Environment.NewLine, ifPos);
+                        if (newLinePos > 0)
                         {
-                            if (endBracket &&
-                                indentation <= startIndentation &&
-                                !line.Contains("else"))
+                            sourceCode = sourceCode.Remove(0, newLinePos+Environment.NewLine.Length);
+                            int startIndentation = this.CountLeadingSpaces(sourceCode);
+                            var lines = sourceCode.Replace("\r", "").Split('\n');
+                            string newSource = string.Empty;
+                            bool endBracket = false;
+                            foreach (string line in lines)
                             {
-                                // After the end bracket, break, unless an else block is coming.
-                                break;
+                                int indentation = this.CountLeadingSpaces(line);
+                                if (indentation >= startIndentation || line.Trim().Length == 0)
+                                {
+                                    if (endBracket &&
+                                        indentation <= startIndentation &&
+                                        !line.Contains("else"))
+                                    {
+                                        // After the end bracket, break, unless an else block is coming.
+                                        break;
+                                    }
+                                    newSource += line + '\n';
+                                    endBracket = ((line.Trim() == "}" && indentation == startIndentation));
+                                }
+                                else
+                                {
+                                    break;
+                                }
                             }
-                            newSource += line + '\n';
-                            endBracket = ((line.Trim() == "}" && indentation == startIndentation));
-                        }
-                        else
-                        {
-                            break;
+                            sourceCode = newSource.Replace("\n", "\r\n");
                         }
                     }
-                    sourceCode = newSource.Replace("\n", "\r\n");
                 }
             }
             if (!originalSource.Contains(sourceCode))

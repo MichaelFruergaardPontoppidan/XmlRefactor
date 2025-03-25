@@ -13,9 +13,12 @@ namespace XmlRefactor
         private SignalEndDelegate signalEndCallback;
         private bool commit = false;
         private List<Rule> rules;
+        public bool cacheBuildMode = false;
+        private ScannerCache cache;
 
-        public Scanner()
+        public Scanner(ScannerCache _cache = null)
         {
+            cache = _cache;
         }
 
         void scanFolder(string path)
@@ -84,10 +87,18 @@ namespace XmlRefactor
                 {
                     if (rule.skip(skipText))
                         continue;
-                    rule.Hits = 0;
-                    processedText = /*rule.formatXML*/(rule.Run(processedText));
-                    processedText = /*rule.formatXML*/(rule.PostRun(processedText));
-                    hits += rule.Hits;
+
+                    if (cacheBuildMode)
+                    {
+                        cache?.Add(filename, rule);
+                    }
+                    else
+                    {
+                        rule.Hits = 0;
+                        processedText = /*rule.formatXML*/(rule.Run(processedText));
+                        processedText = /*rule.formatXML*/(rule.PostRun(processedText));
+                        hits += rule.Hits;
+                    }
                 }
                 
                 if (fileText != processedText)
@@ -117,11 +128,11 @@ namespace XmlRefactor
         }
 
         public void Run(
-            string path, 
+            string path,
             bool commitValue,
             List<Rule> rulesValue,
-            ResultDelegate resultDelegate, 
-            ProgressDelegate progressDelegate, 
+            ResultDelegate resultDelegate,
+            ProgressDelegate progressDelegate,
             SignalEndDelegate signalEndDelegate)
         {
             commit = commitValue;
@@ -130,7 +141,20 @@ namespace XmlRefactor
             progressCallback = progressDelegate;
             signalEndCallback = signalEndDelegate;
             onlyScanXppFolders = this.allRulesAreXppRules();
-            this.scanFolder(path);
+
+            if (cache != null && rules.Count == 1)
+            {
+                Rule r = rules.First();
+                var files = cache.Files(r);
+                foreach (var file in files)
+                {
+                    this.scanFile(file);
+                }
+            }
+            else
+            {
+                this.scanFolder(path);
+            }
             signalEndCallback();
         }
     }
