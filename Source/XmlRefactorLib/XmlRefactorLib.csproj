@@ -187,6 +187,7 @@
     <Compile Include="Rules\Tests\RuleConvertToCheckInTestCases.cs" />
     <Compile Include="Rules\Tests\RuleFlightToFeatureDependency.cs" />
     <Compile Include="Rules\Tests\RuleRenameScenarioTests.cs" />
+    <Compile Include="Rules\ZeroDelete\AddZeroDeleteToTables.cs" />
     <Compile Include="Scanner.cs" />
     <Compile Include="ScannerCache.cs" />
     <Compile Include="Settings.cs" />
@@ -218,6 +219,7 @@
     <Content Include="RulesInput\ObsoleteIn73.txt" />
     <Content Include="RulesInput\ObsoleteIn80.txt" />
     <Content Include="RulesInput\ObsoleteIn81.txt" />
+    <Content Include="RulesInput\TablesToAddZeroDelete.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
