@@ -31,7 +31,16 @@ class Program
             lib.settings.RuleToRun = args[2];
             ScannerCache scannerCache = new ScannerCache();
 
-            string ruleInput = @"../../../XmlRefactorCacheBuilder/" + args[3];
+            string ruleInput;
+
+            if (args.Length > 3)
+            {
+                ruleInput = args[3];
+            }
+            else
+            {
+                ruleInput = @"../../../XmlRefactorCacheBuilder/RuleParamemters.txt";
+            }
 
             if (!File.Exists(ruleInput))
             {
@@ -70,7 +79,7 @@ class Program
 
             Console.WriteLine($"\rCompleted in {timer.Elapsed.ToString()}. Scanned {scannedFiles} files.");
             return 0;
-        }
+        }      
         catch (Exception e)
         {
             Console.WriteLine();

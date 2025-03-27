@@ -95,8 +95,15 @@ namespace XmlRefactor
                     else
                     {
                         rule.Hits = 0;
-                        processedText = /*rule.formatXML*/(rule.Run(processedText));
-                        processedText = /*rule.formatXML*/(rule.PostRun(processedText));
+                        try
+                        {
+                            processedText = /*rule.formatXML*/(rule.Run(processedText));
+                            processedText = /*rule.formatXML*/(rule.PostRun(processedText));
+                        }
+                        catch (NotSupportedException e)
+                        {
+                            Console.WriteLine($"\r{e.Message} in file {Scanner.FILENAME}");   
+                        }
                         hits += rule.Hits;
                     }
                 }
@@ -112,15 +119,22 @@ namespace XmlRefactor
 
                     if (commit)
                     {
-                        System.Text.Encoding outEncoding;
-                        outEncoding = SourceFile.fileEncoding;
-
-                        SourceFile = null;
-                        File.SetAttributes(filename, FileAttributes.Archive);
-                        FileStream destinationStream = new FileStream(filename, FileMode.Create);
-                        using (StreamWriter destinationFile = new StreamWriter(destinationStream, outEncoding))
+                        if (processedText == string.Empty)
                         {
-                            destinationFile.Write(processedText);
+                            File.Delete(filename);
+                        }
+                        else
+                        {
+                            System.Text.Encoding outEncoding;
+                            outEncoding = SourceFile.fileEncoding;
+
+                            SourceFile = null;
+                            File.SetAttributes(filename, FileAttributes.Archive);
+                            FileStream destinationStream = new FileStream(filename, FileMode.Create);
+                            using (StreamWriter destinationFile = new StreamWriter(destinationStream, outEncoding))
+                            {
+                                destinationFile.Write(processedText);
+                            }
                         }
                     }
                 }                

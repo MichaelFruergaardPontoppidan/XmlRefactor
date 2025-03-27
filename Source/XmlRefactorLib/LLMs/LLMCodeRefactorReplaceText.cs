@@ -212,7 +212,12 @@ namespace XmlRefactor
                 if (match.Success)
                 {
                     int ifPos = sourceCode.LastIndexOf(" if", match.Index);
-                    if (ifPos > 0 && match.Index - ifPos < 500) // Not too far apart
+                    int semiColonPos = sourceCode.LastIndexOf(";", match.Index);
+                    int bracketEndPos = sourceCode.LastIndexOf("}", match.Index);
+                    if (ifPos > 0 && 
+                        ifPos > semiColonPos &&    // No ; in the middle
+                        ifPos > bracketEndPos &&   // No } in the middle
+                        match.Index - ifPos < 500) // Not too far apart
                     {
                         int newLinePos = sourceCode.LastIndexOf(Environment.NewLine, ifPos);
                         if (newLinePos > 0)

@@ -21,6 +21,11 @@ namespace XmlRefactor
         public RuleRemoveFlightReference()
         {
         }
+        public override void Init(string parameter)
+        {
+            base.Init(parameter);
+            flightToRemove = this.getFlightToRemove();
+        }
 
         public override string RuleName()
         {
@@ -75,16 +80,48 @@ namespace XmlRefactor
 
         private string rewriteSource(string sourceCode)
         {         
-            string updatedAttribs = this.rewriteTestAttributes(sourceCode);
-            if (updatedAttribs != null)
-            {
-                return updatedAttribs;
-            }
+            string updatedSource = this.rewriteAttributes(sourceCode);
+            
+            if (updatedSource == null)
+                return null;
 
-            return null;
+            updatedSource = this.rewriteCommentLineWithReference(updatedSource);
+
+            return updatedSource;
         }
 
-        private string rewriteTestAttributes(string sourceCode)
+        private string rewriteCommentLineWithReference(string sourceCode)
+        {
+            XmlMatch m = new XmlMatch();
+                m.AddLiteral(flightToRemove);
+
+            Match match = m.Match(sourceCode);
+            if (match.Success)
+            {
+                int startOfLine = sourceCode.LastIndexOf(Environment.NewLine, match.Index);
+                int endOfLine = sourceCode.IndexOf(Environment.NewLine, match.Index);
+                string line = sourceCode.Substring(startOfLine, endOfLine - startOfLine);
+
+                if (line.Trim().StartsWith("//"))
+                {
+                    string newLine = LLM.prompt($"Rewrite this comment by removing references to flight(s), {flightToRemove} and enablement. That is now redundant as the flights are always enabled.", line);
+                    if (newLine.Trim().StartsWith("//") &&
+                        newLine.Trim().Length > 2)
+                    { 
+                        sourceCode = sourceCode.Replace(line.Trim(), newLine.Trim());
+                    }
+                    else
+                    {
+                        // Remove the line
+                        sourceCode = sourceCode.Remove(startOfLine, endOfLine - startOfLine);
+                    }
+                }
+            }
+
+            return sourceCode;
+        }
+              
+        private string rewriteAttributes(string sourceCode)
         {
             XmlMatch m = new XmlMatch();
             m.AddCommaOptional()
@@ -129,10 +166,59 @@ namespace XmlRefactor
                 }
             }
 
-            return null;
+            m = new XmlMatch();
+            m.AddCommaOptional()
+               .AddWhiteSpace()
+               .AddOneOfLiterals("SysTestFeatureDependency", "SysTestCaseFlightDependency")
+               .AddStartParenthesis()
+               .AddLiteral("classStr")
+               .AddStartParenthesis()
+               .AddLiteral(flightToRemove)
+               .AddEndParenthesis()
+               .AddEndParenthesis()
+               .AddCommaOptional()
+               .AddWhiteSpace();
+
+            match = m.Match(sourceCode);
+            if (match.Success)
+            {
+                int length = match.Length;
+                string trimmedValue = match.Value.Trim();
+                if (trimmedValue.StartsWith(",") && trimmedValue.EndsWith(","))
+                {
+                    length = match.Value.LastIndexOf(",");
+                }
+                string updatedSource = sourceCode.Remove(match.Index, length);
+                return updatedSource;
+            }
+
+            m = new XmlMatch();
+            m.AddCommaOptional()
+               .AddWhiteSpace()
+               .AddLiteral("DataMaintenanceFeatureClass")
+               .AddStartParenthesis()
+               .AddLiteral("classStr")
+               .AddStartParenthesis()
+               .AddLiteral(flightToRemove)
+               .AddEndParenthesis();
+
+            match = m.Match(sourceCode);
+            if (match.Success)
+            {
+                int startOfLine = sourceCode.LastIndexOf(Environment.NewLine, match.Index);
+                int endOfLine = sourceCode.IndexOf(Environment.NewLine, match.Index);
+                string line = sourceCode.Substring(startOfLine, endOfLine - startOfLine).Trim();
+
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    sourceCode = sourceCode.Remove(startOfLine, endOfLine - startOfLine);
+                }
+            }
+
+            return sourceCode;
         }
 
-        private string deleteMethod(string methodName, string sourceCode)
+        private (string, int) deleteMethod(string methodName, string sourceCode)
         {
             XmlMatch m = new XmlMatch();
              m.AddXMLStart("Method", false)
@@ -151,7 +237,7 @@ namespace XmlRefactor
             Match match = m.Match(sourceCode);
             if (match.Success)
             {               
-                return sourceCode.Remove(match.Index, match.Length);
+                return (sourceCode.Remove(match.Index, match.Length), match.Index);
             }
             throw new Exception($"Unable to delete method: {methodName} from file {Scanner.FILENAME}");
         }
@@ -261,17 +347,34 @@ namespace XmlRefactor
                 while (true);
             }
 
+            if (source.IndexOf(flightToRemove, StringComparison.OrdinalIgnoreCase) > 0)
+            {
+                if (source.IndexOf("FeatureStateProvider", StringComparison.OrdinalIgnoreCase) > 0)
+                    throw new NotSupportedException($"Unsupported pattern: FeatureStateProvider, for flight: {flightToRemove}");
+
+                throw new Exception("Unknown pattern recognized.");
+            }
+
             return source;
+        }
+
+        private bool isFlightClass()
+        {
+            return (Scanner.FILENAME.EndsWith(flightToRemove + ".xml", StringComparison.OrdinalIgnoreCase));
+        }
+
+        public override bool skip(string input)
+        {
+            if (isFlightClass())
+            {
+                //Skip the flight class itself
+                return true;
+            }
+            return base.skip(input);
         }
 
         public string Run(string _input, int _startAt = 0)
         {  
-            if (Scanner.FILENAME.EndsWith(flightToRemove + ".xml", StringComparison.OrdinalIgnoreCase))
-            {
-                //Skip the flight class itself
-                return _input;
-            }
-
             Match match = xpoMatch.Match(_input, _startAt);
             if (match.Success)
             {
@@ -339,12 +442,20 @@ namespace XmlRefactor
                             updatedSource = this.rewriteSource(sourceCode);
                         }
 
-                        if (updatedSource != null)
-                        {
-                           
+                        if (updatedSource != null &&
+                            updatedSource != sourceCode)
+                        {                           
                             if (updatedSource == String.Empty)
                             {
-                                updatedInput = this.deleteMethod(methodName, _input);
+                                if (scopedToMethod)
+                                {
+                                    (updatedInput, sourcePos) = this.deleteMethod(methodName, _input);
+                                }
+                                else
+                                {
+                                    //Delete file
+                                    return string.Empty;
+                                }
                             }
                             else
                             {
@@ -358,12 +469,7 @@ namespace XmlRefactor
                             Hits++;
                             
                             return this.Run(updatedInput, sourcePos);
-                        }
-
-                        if (sourceCode.IndexOf(flightToRemove, StringComparison.OrdinalIgnoreCase) > 0)
-                        {
-                            throw new Exception("Unknown pattern recognized.");
-                        }
+                        }                       
                         break;
 
                     case "FeatureClass":

@@ -37,7 +37,7 @@ namespace XmlRefactor
             }
         }
 
-        public void Init(string parameter)
+        public virtual void Init(string parameter)
         {
             InputParameter = parameter;
         }

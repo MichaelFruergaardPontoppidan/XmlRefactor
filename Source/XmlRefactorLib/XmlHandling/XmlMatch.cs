@@ -40,7 +40,7 @@ namespace XmlRefactor
         }
         public XmlMatch AddDelimter()
         {
-            builder.Append(@"[\<\:\,\)\(\]\[\s]+");
+            builder.Append(@"[\>\.\<\:\,\)\(\]\[\s]+");
             return this;
         }
         public XmlMatch AddWhiteSpaceNoLineBreaksRequired()
@@ -62,7 +62,7 @@ namespace XmlRefactor
         }
         public XmlMatch AddLiteral(string literal)
         {
-            builder.Append(literal);
+            builder.Append(System.Text.RegularExpressions.Regex.Escape(literal));
             return this;
         }
 

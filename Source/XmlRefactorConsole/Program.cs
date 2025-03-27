@@ -56,7 +56,7 @@ class Program
                 return 1;
             }
             rule.Settings = lib.settings;
-            rule.InputParameter = lib.settings.RuleParameter;
+            rule.Init(lib.settings.RuleParameter);
             rules.Add(rule);
 
             Stopwatch timer = new Stopwatch();
