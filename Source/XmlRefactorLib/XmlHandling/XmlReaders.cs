@@ -16,21 +16,7 @@ namespace XmlRefactor
         public Encoding fileEncoding;
 		private UTF8Encoding utf8Encoding = new UTF8Encoding(true, true); // turn on BOM and error checking
 		private string text;
-		private char[] bufferText;
-		/// <summary>
-		/// The contents of the file with header information removed
-		/// </summary>
-		//public char[] Text
-		//{
-		//	get
-		//	{
-		//		return bufferText;
-		//	}
-		//}
-        public char[] TextAsCharArray()
-        {
-            return bufferText;
-        }
+
         public string Text()
         {
             return text;
@@ -42,21 +28,20 @@ namespace XmlRefactor
 		/// <param name="file">Xml file to read</param>
 		public XmlReader(string file)
 		{
-			//Open file and read contents
-			FileStream fsr = null;
-			BinaryReader breader = null;
-						
-			try
-			{
-				fsr = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);	
-				
-				breader = new BinaryReader(fsr);
-				byte[] binaryContent = new byte[fsr.Length];					
-				breader.Read(binaryContent, 0, (int) fsr.Length);
-                // having read the entire contents of the buffer into memory all at once, it's easy to check for character set.
+            Encoding utf8Encoding = Encoding.UTF8;
+            Encoding ansi1252fileEncoding = Encoding.GetEncoding(1252); // all existing XML files should be in 1252. Danish ones will be a problem.;
+
+            using (FileStream fsr = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (BufferedStream bs = new BufferedStream(fsr))
+            using (BinaryReader breader = new BinaryReader(bs))
+            {
+                long fileLength = fsr.Length;
+                byte[] binaryContent = new byte[fileLength];
+                breader.Read(binaryContent, 0, (int)fileLength);
+
                 try
                 {
-                    if (fsr.Length > 3 &&
+                    if (fileLength > 3 &&
                        binaryContent[0] == 0xEF &&
                        binaryContent[1] == 0xBB &&
                        binaryContent[2] == 0xBF)
@@ -66,23 +51,15 @@ namespace XmlRefactor
                     }
                     else
                     {
-                        fileEncoding = Encoding.GetEncoding(1252); // all existing XML files should be in 1252. Danish ones will be a problem.
+                        fileEncoding = ansi1252fileEncoding;
                         text = fileEncoding.GetString(binaryContent, 0, binaryContent.Length);
                     }
                 }
-                catch (Exception e)
+                catch 
                 {
                     text = "";
                 }
-				bufferText = text.ToCharArray();
-			
 			}			
-			finally
-			{
-				if (breader != null)
-					breader.Close();		
-			}
-		}
-       
+		}       
 	}
 }

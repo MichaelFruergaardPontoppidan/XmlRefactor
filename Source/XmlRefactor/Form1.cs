@@ -90,11 +90,9 @@ namespace XmlRefactor
         public List<Rule> getRulesToRun()
         {
             rules = new List<Rule>();
-
             
             foreach (Rule rule in RulesCtrl.CheckedItems)
             {
-                rule.Init();
                 rules.Add(rule);
             }
 

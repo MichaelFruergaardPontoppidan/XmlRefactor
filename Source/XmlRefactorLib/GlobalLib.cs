@@ -13,12 +13,9 @@ namespace XmlRefactor
     {
         public Settings settings = XmlRefactor.Properties.Settings.Default;
         
-
         public GlobalLib()
         {
             DotEnv.Load();
-       //     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
         }
 
     }

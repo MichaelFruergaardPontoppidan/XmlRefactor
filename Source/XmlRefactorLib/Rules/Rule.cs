@@ -13,7 +13,8 @@ namespace XmlRefactor
     {
         private XmlMatch priv_xpoMatch;
         private string now = ( (int) System.DateTime.Now.TimeOfDay.TotalSeconds).ToString();
-        int hits = 0;
+        public string InputParameter = string.Empty;
+        
         public Settings Settings { get; set; }
 
         public int Hits { get; set; }
@@ -35,7 +36,12 @@ namespace XmlRefactor
                 return priv_xpoMatch;
             }
         }
-        
+
+        public virtual void Init(string parameter)
+        {
+            InputParameter = parameter;
+        }
+
         protected virtual void buildXpoMatch()
         {
         }
@@ -53,14 +59,10 @@ namespace XmlRefactor
             
             if (mustContainLower != String.Empty)
             {
-                return !input.ToLower().Contains(mustContainLower);
+                return !input.Contains(mustContainLower);
             }
             return false;
-        }
-
-        virtual public void Init()
-        {
-        }
+        }            
 
         virtual public string mustContain()
         {
@@ -68,6 +70,12 @@ namespace XmlRefactor
         }
 
         abstract public string Run(string input);
+
+        virtual public string PostRun(string input)
+        {
+            return input;
+        }
+
         override sealed public string ToString()
         {
             return this.Grouping() + "." + this.RuleName();
