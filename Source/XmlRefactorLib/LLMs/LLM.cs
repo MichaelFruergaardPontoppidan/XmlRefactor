@@ -26,7 +26,31 @@ namespace XmlRefactor
             }
 
             string preface = "Refactor this X++ code to satisfy this new requirement (and nothing else): ";
-            string response = LLM.promptAsync(preface+p+Environment.NewLine+ Environment.NewLine + code).Result;
+            string response = string.Empty;
+
+            int maxRetries = 3; // Number of retries
+            int attempt = 0;
+
+            while (attempt < maxRetries)
+            {
+                try
+                {
+                    response = LLM.promptAsync(preface + p + Environment.NewLine + Environment.NewLine + code).Result;
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    attempt++; // Increment the retry counter
+                    Console.WriteLine($"Attempt {attempt} failed: {ex.Message}");
+                    if (attempt >= maxRetries)
+                    {
+                        Console.WriteLine("Maximum retries reached. Giving up.");
+                        throw; // Rethrow the exception or handle it as needed
+                    }
+                    System.Threading.Thread.Sleep(attempt * 1000);
+                }
+
+            }
 
             if (response.StartsWith(Environment.NewLine))
             { 
@@ -187,6 +211,13 @@ Refactoring guidance:
                 var responseText = responseData["choices"][0]["message"]["content"];
                 string result = responseText.ToString();
                 result = result.Replace("```", "");
+
+                if (result == "empty string" ||
+                    result == "\"\"")
+                {
+                    return String.Empty;
+                }
+
                 return result;
             }
         }

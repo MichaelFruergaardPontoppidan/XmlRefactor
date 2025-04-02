@@ -212,9 +212,11 @@ namespace XmlRefactor
                 if (match.Success)
                 {
                     int ifPos = sourceCode.LastIndexOf(" if", match.Index);
+                    int elseifPos = sourceCode.LastIndexOf("else if", match.Index);
                     int semiColonPos = sourceCode.LastIndexOf(";", match.Index);
                     int bracketEndPos = sourceCode.LastIndexOf("}", match.Index);
                     if (ifPos > 0 && 
+                        ifPos != elseifPos+4 &&  // Not an "else if"
                         ifPos > semiColonPos &&    // No ; in the middle
                         ifPos > bracketEndPos &&   // No } in the middle
                         match.Index - ifPos < 500) // Not too far apart
@@ -283,6 +285,8 @@ namespace XmlRefactor
             {
                 if (c == ' ')
                     count++;
+                else if (c == '\t')
+                    count += 4;
                 else
                     break;
             }
