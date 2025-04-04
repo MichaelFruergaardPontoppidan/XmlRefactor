@@ -352,11 +352,21 @@ namespace XmlRefactor
                 if (source.IndexOf("FeatureStateProvider", StringComparison.OrdinalIgnoreCase) > 0)
                     throw new NotSupportedException($"Unsupported pattern: FeatureStateProvider, for flight: {flightToRemove}");
 
-                throw new Exception("Unknown pattern recognized.");
+                if (source.IndexOf("SysDetour", StringComparison.OrdinalIgnoreCase) > 0)
+                {
+                    Console.WriteLine($"Unsupported pattern: SysDetour, for flight: {flightToRemove} in {Scanner.FILENAME}");
+                }
+                else
+                {
+                    Console.WriteLine($"Unknown pattern recognized in {Scanner.FILENAME}");
+                }
+                //      throw new Exception("Unknown pattern recognized.");
             }
 
             return source;
         }
+
+
 
         private bool isFlightClass()
         {

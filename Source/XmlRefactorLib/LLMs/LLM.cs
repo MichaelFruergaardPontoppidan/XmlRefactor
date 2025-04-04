@@ -130,11 +130,11 @@ Refactoring guidance:
         if (false) { x; }                                       -> <remove>
         if (!true) { x; }                                       -> <remove>
         if (true) { x; }                                        -> x;
-        if (!false) { x; }                                      -> <remove>;
+        if (!false) { x; }                                      -> x;
         if (false) { x; } else { y; }                           -> y;
         if (!true) { x; } else { y; }                           -> y;
         if (true) { x; } else { y; }                            -> x;
-        if (!false) { x; } else { y; }                          -> y;
+        if (!false) { x; } else { y; }                          -> x;
         true ? a : b                                            -> a;
         !true ? a : b                                           -> b;
         false ? a : b                                           -> b;

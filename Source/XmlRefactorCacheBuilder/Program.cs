@@ -62,6 +62,7 @@ class Program
                 rule.Init(s);
                 rules.Add(rule);
             }
+            Console.WriteLine($"Rules created: {rules.Count}.");
 
             if (File.Exists(cacheFile))
             {
