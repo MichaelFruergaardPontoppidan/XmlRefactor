@@ -310,6 +310,20 @@ namespace XmlRefactor
             int namePos2 = source.IndexOf("</"+name+">", namePos1);
             return source.Substring(namePos1, namePos2 - namePos1);
         }
+        public static string extractPreviousXMLElementInclusive(string name, int pos, string source)
+        {
+            int namePos1 = source.LastIndexOf("<" + name + ">", pos);
+            if (namePos1 == -1)
+            {
+                return String.Empty;
+            }
+
+            
+            int namePos2 = source.IndexOf("</" + name + ">", namePos1);
+            namePos2 += ("</" + name + ">").Length;
+            return source.Substring(namePos1, namePos2 - namePos1);
+        }
+
         public static string extractNextXMLElement(string name, int pos, string source)
         {
             int namePos1 = source.IndexOf("<" + name + ">", pos);

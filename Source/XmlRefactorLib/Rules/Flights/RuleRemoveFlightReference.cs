@@ -393,6 +393,20 @@ namespace XmlRefactor
 
                 switch (containingXMLElement)
                 {
+                    case "Message":
+                    case "Path":
+                        string bpSuppression = MetaData.extractPreviousXMLElementInclusive("Diagnostic", match.Index, _input);
+                        int pos = _input.IndexOf(bpSuppression);
+                        if (pos > 0)
+                        {
+                            int diagLineStart = _input.LastIndexOf(Environment.NewLine, pos);
+                            int diagLineEnd = _input.IndexOf(Environment.NewLine, pos+bpSuppression.Length);
+                            updatedInput = _input.Remove(diagLineStart, diagLineEnd-diagLineStart);
+                            Hits++;
+                            return this.Run(updatedInput, match.Index);
+                        }
+                        break;
+            
                     case "Source":
                     case "Declaration":
                         string sourceCode = MetaData.extractPreviousXMLElement(containingXMLElement, match.Index, _input);

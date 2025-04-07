@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using XmlRefactor;
+using dotenv.net;
 
 class Program
 {
@@ -23,6 +24,8 @@ class Program
 
         try
         {
+            DotEnv.Load();
+
             GlobalLib lib = new GlobalLib();
 
             lib.settings.DirectoryPath = args[0];
