@@ -115,6 +115,7 @@ Requirements:
 - Never use anything other than boolean logic in condition statements(if, while, etc.). For example, if (var x = this.y()) is illegal.
 - Never change catch blocks. For example: Do not delete or change catch(Exception::<type of exception>) blocks
 - All variables have a boolean value. Never remove a variable from a condition block. The following example must not be changed: if (s && s != ""foo"") 
+- Never refactor an != by using a negation sign. The follow example must not be changed: if (a != foo())
 - Variables and constants have a value. Do not substitute them. The following example must not be changed: a = SomeValue; 
 - '' and "" are empty strings, and are a valid values. Do not remove them when refactoring.
 - Do not change existing indentation
@@ -151,7 +152,8 @@ Refactoring guidance:
     Follow same logical rules as in C#, but keep parenthesis.
     If a boolean variable is assigned a value, that no longer matches the name, then rename the variable to a more appropriate name.
     Keep parenthesis for clarity, for example in (((a || b) && c) || d)  
-    Do not add new usage of ternary conditional operator ( b ? x : y).
+    Keep sequencing of conditions.    
+    Do not add new usage of ternary conditional operator ( b ? x : y).    
 
     Examples:
         if (!true)                           -> if (false)
@@ -166,14 +168,12 @@ Refactoring guidance:
         if ((a || b) && c)                   -> <Unchanged>
         if (((a || b) && c) || d)            -> <Unchanged>        
         if (((a || b) && true) || c)         -> if (a || b || c)
+        if ((a && b) || !true || !b)         -> if ((a && b) || !b)
+        if (a && (!true || !b) && c != d)    -> if (a && !b && c != d)
         while (a && !true)                   -> while (false)
         if (a || b || true))                 -> if (a || b)
         if (a) { x = a && b; }               -> if (a) { x = b; };
         boolean isATrueAndBTrue = a && true; -> boolean isATrue = a;
-
-
-
-
 
 - When removing variables that are declared and only referenced once:
     If a variable is used multiple times, it must be preserved.

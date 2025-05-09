@@ -10,6 +10,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
+//TODO: If removal of test method removes the last method on the test class, then delete the entire class. Example: WHSWareReleaseUseCrossDockForShipConsPoliciesFlightV3Test
+//TODO: When a class is internal, then a boolean flag that is non-private can be removed.
 namespace XmlRefactor
 {
 
@@ -309,6 +311,7 @@ namespace XmlRefactor
             foreach (var r in referencesToDelete)
             {
                 XmlMatch m = new XmlMatch();
+                m.AddDelimter();
                 m.AddLiteral(r.Tag);
                 int startPos = 0;
 
@@ -323,7 +326,7 @@ namespace XmlRefactor
                             case "Source":
                             case "Declaration":
 
-                                string sourceCode = MetaData.extractPreviousXMLElement(containingXMLElement, match.Index, _input);
+                                string sourceCode = MetaData.extractPreviousXMLElement(containingXMLElement, match.Index, source);
                                 string updatedSourceCode = this.PostRunForMethod(sourceCode, r);
 
                                 if (updatedSourceCode != null)

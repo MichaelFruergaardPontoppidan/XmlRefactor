@@ -31,7 +31,7 @@ namespace XmlRefactor
             // b = 
 
             XmlMatch m = new XmlMatch();
-            m.AddCommaOptional()
+            m.AddDelimter()
                .AddWhiteSpace()
                .AddLiteral(variableName)
                .AddEqual();
