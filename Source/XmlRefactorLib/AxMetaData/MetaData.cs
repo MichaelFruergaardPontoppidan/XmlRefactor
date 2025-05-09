@@ -274,6 +274,18 @@ namespace XmlRefactor
                 throw new ArgumentException("Invalid input.");
             }
 
+            string source = extractPreviousXMLElementInclusive("Source", position, xml);
+            if (source != string.Empty)
+            {
+                int posOfSource = xml.IndexOf(source);
+                if (posOfSource > 0 &&
+                    position > posOfSource &&
+                    position < posOfSource+source.Length)
+                {
+                    return "Source";
+                }
+            }
+
             string closestElementName = null;
 
             for (int i = position - 1; i >= 0; i--)
@@ -286,7 +298,10 @@ namespace XmlRefactor
 
                 string line = xml.Substring(lineStart, lineEnd - lineStart).Trim();
 
-                if (line.StartsWith("<"))
+                if (line.StartsWith("<") && 
+                    !line.StartsWith("<!") &&
+                    !line.StartsWith("</") 
+                    )
                 {
                     string elementName = line.Substring(1, line.IndexOf('>') - 1);
                     closestElementName = elementName;

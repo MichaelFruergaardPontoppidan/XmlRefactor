@@ -506,6 +506,10 @@ namespace XmlRefactor
                         Hits++;
                         return this.Run(updatedInput, match.Index);
 
+                    case "Name":
+                        // Do not change method names
+                        break;
+
                     default:
                         throw new Exception($"Unsupported xml element: {containingXMLElement}");
 
